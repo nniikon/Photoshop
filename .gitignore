@@ -1,6 +1,8 @@
 .cache/clangd/index
 CMakeFiles
 Makefile
+*.a
+*.o
 CMakeCache.txt
 cmake_install.cmake
 compile_commands.json
