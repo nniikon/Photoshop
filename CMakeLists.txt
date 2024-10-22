@@ -46,7 +46,9 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
 
 include_directories(${CMAKE_SOURCE_DIR}/sfm_implementation)
 include_directories(${CMAKE_SOURCE_DIR}/photoshopAPI)
+include_directories(${CMAKE_SOURCE_DIR}/logger)
 
+add_subdirectory(logger)
 add_subdirectory(sfm_implementation)
 add_subdirectory(photoshopAPI)
 
@@ -54,4 +56,4 @@ add_executable(ps
     photoshop/source/main.cpp
 )
 
-target_link_libraries(ps PUBLIC sfm_implementation api)
+target_link_libraries(ps PUBLIC sfm_implementation api logger)
