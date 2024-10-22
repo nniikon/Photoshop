@@ -10,8 +10,7 @@ namespace psapi
 namespace sfm
 {
 
-class RenderWindow : public ARenderWindow
-{
+class RenderWindow : public ARenderWindow {
 private:
     sf::RenderWindow window_;
 
@@ -27,11 +26,11 @@ public:
     void display() override;
     void close() override;
     bool pollEvent(Event& event) override;
+
     void draw(Drawable *target) override;
 };
 
-class FuckYouVanyaImage : public AImage
-{
+class FuckYouVanyaImage : public AImage {
 private:
     sf::Image image_;
 
@@ -46,14 +45,14 @@ public:
     void setPosition(const vec2i &coord, size_t ind) override;
     void setPosition(const vec2f &coord, size_t ind) override;
     void setPosition(const vec2d &coord, size_t ind) override;
-    void setPosition(int x, int y, size_t ind) override;
-    void setPosition(float x, float y, size_t ind) override;
+    void setPosition(int    x, int    y, size_t ind) override;
+    void setPosition(float  x, float  y, size_t ind) override;
     void setPosition(double x, double y, size_t ind) override;
+
     void draw(ARenderWindow *window) override;
 };
 
-class Texture : public ATexture
-{
+class Texture : public ATexture {
 private:
     sf::Texture texture_;
 
@@ -61,18 +60,18 @@ private:
 
 public:
     bool create(unsigned int width, unsigned int height) override;
-    bool loadFromFile(const std::string& filename, const IntRect& area = IntRect()) override;
+    bool loadFromFile  (const std::string& filename,        const IntRect& area = IntRect()) override;
     bool loadFromMemory(const void* data, std::size_t size, const IntRect& area = IntRect()) override;
-    bool loadFromImage(const AImage *image, const IntRect& area = IntRect()) override;
+    bool loadFromImage (const AImage *image,                const IntRect& area = IntRect()) override;
     vec2u getSize() const override;
     std::unique_ptr<AImage> copyToImage() const override;
     void update(const Color *pixels) override;
-    void update(const Color *pixels, unsigned int width, unsigned int height, unsigned int x, unsigned int y) override;
+    void update(const Color *pixels, unsigned int width, unsigned int height,
+                                     unsigned int x, unsigned int y) override;
     ATexture& operator=(const ATexture& right) override;
 };
 
-class Sprite : public ASprite
-{
+class Sprite : public ASprite {
 private:
     sf::Sprite sprite_;
 
@@ -91,8 +90,7 @@ public:
     void draw(ARenderWindow *window) override;
 };
 
-class Font : public AFont
-{
+class Font : public AFont {
 private:
     sf::Font font_;
 
@@ -102,8 +100,7 @@ public:
     bool loadFromFile(const std::string& filename) override;
 };
 
-class Text : public AText
-{
+class Text : public AText {
 private:
     sf::Text text_;
 
