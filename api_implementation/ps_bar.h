@@ -35,7 +35,7 @@ protected:
 
 class ABar : public psapi::IBar {
 public:
-    virtual void draw(psapi::ARenderWindow* renderWindow) override;
+    virtual ~ABar();
 
     virtual       psapi::IWindow* getWindowById(psapi::wid_t id)       override;
     virtual const psapi::IWindow* getWindowById(psapi::wid_t id) const override;

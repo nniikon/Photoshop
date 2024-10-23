@@ -76,6 +76,9 @@ const psapi::IWindow* ABar::getWindowById(psapi::wid_t id) const {
     return nullptr;
 }
 
+ABar::~ABar() {
+}
+
 psapi::IWindow* ABar::getWindowById(psapi::wid_t id) {
     return const_cast<psapi::IWindow*>(static_cast<const ABar*>(this)->getWindowById(id));
 }
