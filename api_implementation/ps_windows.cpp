@@ -137,13 +137,17 @@ void RootWindow::forceDeactivate() {
 
 // getRootwindow singleton implementation
 
-psapi::IWindow* getRootWindow() {
+namespace psapi {
+    
+IWindowContainer* getRootWindow() {
     static RootWindow rootWindow;
     return &rootWindow;
 }
 
-psapi::generalFunction getGeneralFunction(const std::string& name) {
+generalFunction getGeneralFunction(const std::string& name) {
     LOG_S(ERROR) << "Luckily, it's not (yet) needed" << name;
 
     return nullptr;
 }
+
+} // namespace
