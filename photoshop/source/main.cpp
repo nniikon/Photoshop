@@ -1,7 +1,9 @@
 #include "api_sfm.hpp"
 #include "sfm_implementation.h"
+#include "ps_plugin_toolbar.h"
 
 #include "loguru.hpp"
+#include <dlfcn.h>
 
 using namespace psapi;
 
@@ -11,6 +13,8 @@ int main(int argc, char *argv[]) {
 
     sfm::RenderWindow window(800, 600, "StandPhotoshop");
 
+    loadPlugin();
+
     while (window.isOpen()) {
         sfm::Event event;
         if (window.pollEvent(event)) {
@@ -18,6 +22,11 @@ int main(int argc, char *argv[]) {
                 window.close();
             }
         }
+        window.display();
+        window.clear();
+
+        getRootWindow()->draw(&window);
+        getRootWindow()->update(&window, event);
     }
 
     return 0;

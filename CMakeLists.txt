@@ -40,22 +40,23 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
     -fcheck-new \
     -fstack-protector \
     -fstrict-overflow \
-    -fno-omit-frame-pointer \
-    -fsanitize=address,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr"
+    -fno-omit-frame-pointer -fPIC"
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/sfm_implementation)
 include_directories(${CMAKE_SOURCE_DIR}/api_implementation)
 include_directories(${CMAKE_SOURCE_DIR}/photoshopAPI)
 include_directories(${CMAKE_SOURCE_DIR}/logger)
+include_directories(${CMAKE_SOURCE_DIR}/system_plugins)
 
 add_subdirectory(logger)
 add_subdirectory(sfm_implementation)
 add_subdirectory(api_implementation)
 add_subdirectory(photoshopAPI)
+add_subdirectory(system_plugins)
 
 add_executable(ps
     photoshop/source/main.cpp
 )
 
-target_link_libraries(ps PUBLIC api_implementation sfm_implementation api logger)
+target_link_libraries(ps PUBLIC plugin_toolbar api_implementation sfm_implementation api logger)
