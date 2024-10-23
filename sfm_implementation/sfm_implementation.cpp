@@ -154,27 +154,27 @@ bool Texture::create(unsigned int width, unsigned int height) {
 }
 
 bool Texture::loadFromFile(const std::string& filename, const IntRect& area) {
-    sf::IntRect sfArea(static_cast<int>(area.top_x),
-                       static_cast<int>(area.top_y),
-                       static_cast<int>(area.width),
-                       static_cast<int>(area.height));
+    sf::IntRect sfArea(area.top_x,
+                       area.top_y,
+                       area.width,
+                       area.height);
     return texture_.loadFromFile(filename, sfArea);
 }
 
 bool Texture::loadFromMemory(const void* data, std::size_t size, const IntRect& area) {
-    sf::IntRect sfArea(static_cast<int>(area.top_x),
-                       static_cast<int>(area.top_y),
-                       static_cast<int>(area.width),
-                       static_cast<int>(area.height));
+    sf::IntRect sfArea(area.top_x,
+                       area.top_y,
+                       area.width,
+                       area.height);
     return texture_.loadFromMemory(data, size, sfArea);
 }
 
 bool Texture::loadFromImage(const AImage *image, const IntRect& area) {
     const FuckYouVanyaImage* sfmImage = static_cast<const FuckYouVanyaImage*>(image);
-    sf::IntRect sfArea(static_cast<int>(area.top_x),
-                       static_cast<int>(area.top_y),
-                       static_cast<int>(area.width),
-                       static_cast<int>(area.height));
+    sf::IntRect sfArea(area.top_x,
+                       area.top_y,
+                       area.width,
+                       area.height);
     return texture_.loadFromImage(sfmImage->image_, sfArea);
 }
 
@@ -244,8 +244,8 @@ const vec2f Sprite::getPosition() const
 
 IntRect Sprite::getGlobalBounds() const {
     sf::FloatRect bounds = sprite_.getGlobalBounds();
-    return { static_cast<unsigned int>(bounds.left), static_cast<unsigned int>(bounds.top),
-             static_cast<unsigned int>(bounds.width), static_cast<unsigned int>(bounds.height) };
+    return { static_cast<int>(bounds.left),  static_cast<int>(bounds.top),
+             static_cast<int>(bounds.width), static_cast<int>(bounds.height) };
 }
 
 void Sprite::draw(ARenderWindow *window) {

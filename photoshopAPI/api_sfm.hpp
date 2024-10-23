@@ -32,9 +32,13 @@ struct Color
     uint8_t b;
     uint8_t a;
 
-    Color(const Color &color);
+    Color()                              = default;
+    Color &operator=(const Color &color) = default;
+    Color(const Color &color)            = default;
+
     Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a);
     ~Color() = default;
+
 
     Color &operator+=(const Color &color);
     Color &operator*=(const Color &color);
@@ -74,10 +78,10 @@ public:
 
 struct IntRect
 {
-    unsigned int top_x;
-    unsigned int top_y;
-    unsigned int width;
-    unsigned int height;
+    int top_x;
+    int top_y;
+    int width;
+    int height;
 };
 
 class ATexture

@@ -11,10 +11,6 @@ namespace sfm
 {
 
 
-Color::Color(const Color &color)
-    :   r(color.r), g(color.g), b(color.b), a(color.a) {}
-
-
 Color::Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a)
 :   r(init_r), g(init_g), b(init_b), a(init_a) {}
 
