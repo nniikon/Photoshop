@@ -40,6 +40,7 @@ const wid_t kInvalidWindowId = -1;
 class IWindow
 {
 public:
+    virtual ~IWindow();
     /**
      * @brief Renders the window.
      * @param renderWindow The render target.
@@ -58,7 +59,7 @@ public:
      * @brief Gets the unique ID of the window.
      * @return The window ID, or kInvalidWindowId if not set.
      */
-    virtual wid_t getId() const { return kInvalidWindowId; }
+    virtual wid_t getId() const;
 
     /**
      * @brief Retrieves a window by its ID from this window or its children.
@@ -106,7 +107,7 @@ public:
      * @brief Checks if the window is a window container.
      * @return True if the window is a window container, false otherwise.
      */
-    virtual bool isWindowContainer() = 0;
+    virtual bool isWindowContainer() const = 0;
 };
 
 /**
@@ -127,7 +128,7 @@ public:
      */
     virtual void removeWindow(wid_t id) = 0;
 
-    virtual bool isWindowContainer() override { return true; }
+    virtual bool isWindowContainer() const override;
 };
 
 /**
@@ -142,7 +143,7 @@ public:
     virtual       IWindow* getWindowById(wid_t id)       override;
     virtual const IWindow* getWindowById(wid_t id) const override;
 
-    virtual bool isWindowContainer() override { return true; }
+    virtual bool isWindowContainer() const override;
 
 protected:
     std::vector<std::unique_ptr<IWindow> > windows_; ///< Vector of windows.

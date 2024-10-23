@@ -21,6 +21,7 @@ public:
 };
 
 class IBar : public IWindowVector {
+public:
     virtual vec2i getNextChildPos()  const = 0;
     virtual vec2i getNextChildSize() const = 0;
 

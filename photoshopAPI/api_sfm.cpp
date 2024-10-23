@@ -17,9 +17,9 @@ Color::Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a)
 
 Color &Color::operator+=(const Color &color)
 {
-    r = uint8_t(std::min(uint16_t(r + color.r), uint16_t( 255)));
-    g = uint8_t(std::min(uint16_t(g + color.g), uint16_t( 255)));
-    b = uint8_t(std::min(uint16_t(b + color.b), uint16_t( 255)));
+    r = uint8_t(std::min(uint16_t(r + color.r), uint16_t(255)));
+    g = uint8_t(std::min(uint16_t(g + color.g), uint16_t(255)));
+    b = uint8_t(std::min(uint16_t(b + color.b), uint16_t(255)));
     a = std::max(a, color.a);
 
     return *this;
