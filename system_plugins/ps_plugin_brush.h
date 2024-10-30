@@ -4,7 +4,6 @@
 #include "ps_bar.h"
 #include "api_canvas.hpp"
 #include <deque>
-#include <utility>
 
 extern "C" {
     bool loadPlugin();
@@ -24,7 +23,9 @@ private:
         psapi::sfm::vec2f position;
         float time;
     };
-    std::deque<MousePoint> mousePoints_;
+    std::deque<MousePoint> mouse_points_;
+
+    psapi::sfm::vec2i last_mouse_position_ = {0, 0};
 
     void paintAtPosition(const psapi::sfm::vec2i& position);
     void interpolateAndPaint();
