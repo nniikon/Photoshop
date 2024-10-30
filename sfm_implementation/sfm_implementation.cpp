@@ -12,7 +12,7 @@ namespace sfm
 // RenderWindow implementation
 RenderWindow::RenderWindow(unsigned int width, unsigned int height, const std::string& title)
     : window_(sf::VideoMode(width, height), title) {
-    window_.setFramerateLimit(10);
+    window_.setFramerateLimit(60);
 }
 
 bool RenderWindow::isOpen() {
