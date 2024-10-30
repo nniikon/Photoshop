@@ -14,17 +14,19 @@
 namespace psapi {
 
 namespace sfm {
-    class ARenderWindow;
+    class IRenderWindow;
     class Event;
 } // namespace sfm
 
-using sfm::ARenderWindow;
+using sfm::IRenderWindow;
 using sfm::Event;
 
 /**
  * @brief Alias for window identifier type.
  */
 using wid_t = int64_t;
+
+const wid_t kRootWindowId = 0;
 
 using sfm::vec2i;
 using sfm::vec2u;
@@ -45,7 +47,7 @@ public:
      * @brief Renders the window.
      * @param renderWindow The render target.
      */
-    virtual void draw(ARenderWindow* renderWindow) = 0;
+    virtual void draw(IRenderWindow* renderWindow) = 0;
 
     /**
      * @brief Updates the window based on events.
@@ -53,13 +55,13 @@ public:
      * @param event The event to process.
      * @return True if the window was updated, false otherwise.
      */
-    virtual bool update(const ARenderWindow* renderWindow, const Event& event) = 0;
+    virtual bool update(const IRenderWindow* renderWindow, const Event& event) = 0;
 
     /**
      * @brief Gets the unique ID of the window.
      * @return The window ID, or kInvalidWindowId if not set.
      */
-    virtual wid_t getId() const;
+    virtual wid_t getId() const = 0;
 
     /**
      * @brief Retrieves a window by its ID from this window or its children.
@@ -97,7 +99,7 @@ public:
      * @brief Forces the window to activate.
      */
     virtual void forceActivate() = 0;
-    
+
     /**
      * @brief Forces the window to deactivate.
      */

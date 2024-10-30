@@ -11,7 +11,7 @@ namespace sfm
 {
 
 
-Color::Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a)
+Color::Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a /*= 255u*/)
 :   r(init_r), g(init_g), b(init_b), a(init_a) {}
 
 

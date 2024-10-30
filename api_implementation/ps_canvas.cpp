@@ -26,8 +26,8 @@ void Layer::setPixel(vec2i pos, Color pixel) {
 }
 
 void Layer::assert_pos(vec2i pos) const {
-    if(!( 0 < pos.x && pos.x < size_.x &&
-          0 < pos.y && pos.x < size_.y    )) {
+    if(!( 0 <= pos.x && pos.x < size_.x &&
+          0 <= pos.y && pos.x < size_.y    )) {
         LOG_F(FATAL, "Invalid position: %d %d", pos.x, pos.y);
         assert(0);
     }
@@ -57,41 +57,134 @@ void Layer::changeSize(vec2i new_size) {
 
 // Canvas implementation
 
-Canvas::Canvas(vec2i size)
+Canvas::Canvas(vec2i size, vec2i pos)
     : temp_layer_(std::make_unique<Layer>(size)),
-      layers_(1),
+      layers_(0),
+      pos_(pos),
       size_(size),
+      scale_{1, 1},
+      last_mouse_pos_({0, 0}),
+      is_pressed_(false),
       texture_(),
       sprite_(),
-      last_mouse_pos_({0, 0}),
-      is_pressed_(false) {
-    texture_.create(static_cast<unsigned int>(size_.x),
-                    static_cast<unsigned int>(size_.y));
+      is_active_(true) {
+    texture_ = psapi::sfm::Texture::create();
+    texture_->create(static_cast<unsigned int>(size_.x),
+                     static_cast<unsigned int>(size_.y));
+    sprite_  = psapi::sfm::Sprite::create();
 
     layers_.push_back(std::make_unique<Layer>(size_));
+
+    for (int x = 0; x < size_.x; x++) {
+        for (int y = 0; y < size_.y; y++) {
+            temp_layer_->setPixel({x, y}, {120, 120, 120, 120});
+        }
+    }
+    for (int x = 0; x < size_.x; x++) {
+        for (int y = 0; y < size_.y; y++) {
+            layers_.back()->setPixel({x, y}, {120, 120, 120, 120});
+        }
+    }
 }
 
-void Canvas::draw(psapi::ARenderWindow* renderWindow) { 
-    for (const auto& layer : layers_) {
-        texture_.update(layer->pixels_.data());
-        sprite_.setTexture(&texture_);
-        renderWindow->draw(&sprite_);
+void Canvas::DrawLayer(const Layer& layer, psapi::IRenderWindow* renderWindow) {
+    texture_->update(layer.pixels_.data());
+    sprite_->setTexture(texture_.get());
+    sprite_->setScale(scale_.x, scale_.y);
+    sprite_->setPosition(static_cast<float>(pos_.x),
+                         static_cast<float>(pos_.y));
+
+    sprite_->draw(renderWindow);
+}
+
+void Canvas::draw(psapi::IRenderWindow* renderWindow) { 
+    if (!is_active_) {
+        return;
     }
 
-    texture_.update(temp_layer_->pixels_.data());
-    sprite_.setTexture(&texture_);
-    renderWindow->draw(&sprite_);
+    for (const auto& layer : layers_) {
+        DrawLayer(*layer, renderWindow);
+    }
+
+    DrawLayer(*temp_layer_, renderWindow);
 }
 
-void Canvas::DrawLayer(const Layer& layer, psapi::ARenderWindow* renderWindow) {
-    texture_.update(layer.pixels_.data());
-    sprite_.setTexture(&texture_);
-    sprite_.setScale(scale_.x, scale_.y);
-    renderWindow->draw(&sprite_);
+bool Canvas::setLastMousePos(const psapi::IRenderWindow* renderWindow) {
+    vec2i mouse_pos = psapi::sfm::Mouse::getPosition(renderWindow);
+    
+    bool is_in_window = pos_.x <= mouse_pos.x && mouse_pos.x < pos_.x + size_.x &&
+                        pos_.y <= mouse_pos.y && mouse_pos.y < pos_.y + size_.y;
+
+    last_mouse_pos_ = {mouse_pos.x - pos_.x, 
+                       mouse_pos.y - pos_.y};
+
+    return is_in_window;
 }
+
+bool Canvas::update(const psapi::IRenderWindow* renderWindow,
+                    const psapi::sfm::Event& event) {
+    if (!is_active_) {
+        return false;
+    }
+
+    if (event.type == psapi::sfm::Event::MouseButtonReleased) {
+        is_pressed_ = false;
+    }
+
+    bool is_in_window = setLastMousePos(renderWindow);
+    if (!is_in_window) {
+        return false;
+    }
+
+    if (event.type == psapi::sfm::Event::MouseButtonPressed) {
+        is_pressed_ = true;
+    }
+
+    return false;
+}
+
+psapi::wid_t Canvas::getId() const {
+    return psapi::kCanvasWindowId;
+}
+
+const psapi::IWindow* Canvas::getWindowById(psapi::wid_t id) const {
+    if (id == psapi::kCanvasWindowId) {
+        return this;
+    }
+    return nullptr;
+}
+
+psapi::IWindow* Canvas::getWindowById(psapi::wid_t id) {
+    return const_cast<psapi::IWindow*>(static_cast<const Canvas*>(this)->getWindowById(id));
+}
+
+vec2i Canvas::getPos() const {
+    return pos_;
+}
+
+vec2i Canvas::getSize() const {
+    return size_;
+}
+
+void Canvas::setParent(const IWindow* parent) {
+    return;
+}
+
+void Canvas::forceActivate() {
+    is_active_ = true;
+}
+
+void Canvas::forceDeactivate() {
+    is_active_ = false;
+}
+
+bool Canvas::isWindowContainer() const {
+    return false;
+}
+
 
 psapi::ILayer* Canvas::getLayer(size_t index) {
-    return layers_.at(index).get();
+    return const_cast<psapi::ILayer*>(const_cast<const Canvas*>(this)->getLayer(index));
 }
 
 const psapi::ILayer* Canvas::getLayer(size_t index) const {
@@ -115,7 +208,7 @@ void Canvas::cleanTempLayer() {
     }
 }
 
-size_t Canvas::getNLayers() const {
+size_t Canvas::getNumLayers() const {
     return layers_.size();
 }
 
@@ -184,4 +277,12 @@ void Canvas::setActiveLayerIndex(size_t index) {
     }
 
     active_layer_ = index;
+}
+
+vec2i Canvas::getMousePosition() const {
+    return last_mouse_pos_;
+}
+
+bool Canvas::isPressed() const {
+    return is_pressed_;
 }

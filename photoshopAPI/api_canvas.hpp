@@ -27,7 +27,7 @@ public:
 
     virtual void cleanTempLayer() = 0;
 
-    virtual size_t getNLayers() const = 0;
+    virtual size_t getNumLayers() const = 0;
 
     virtual size_t getActiveLayerIndex() const = 0;
     virtual void   setActiveLayerIndex(size_t index) = 0;
@@ -40,7 +40,6 @@ public:
     virtual void setSize (sfm::vec2i size)  = 0;
     virtual void setScale(sfm::vec2f scale) = 0;
 
-
     virtual sfm::vec2i getMousePosition() const = 0;
     virtual bool isPressed()         const = 0;
 };
@@ -48,3 +47,4 @@ public:
 } // namespace
 
 #endif // API_CANVAS_HPP
+

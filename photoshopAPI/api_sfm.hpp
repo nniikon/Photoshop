@@ -11,13 +11,16 @@ namespace sfm
 {
 
 class Event;
-class ARenderWindow;
+class IRenderWindow;
 
 template<typename T>
 struct Vec2D
 {
     T x;
     T y;
+    Vec2D<T>(T init_x, T init_y)
+        : x(init_x), y(init_y) {}
+    Vec2D<T>() = default;
 };
 
 using vec2i = Vec2D<int>;
@@ -32,13 +35,8 @@ struct Color
     uint8_t b;
     uint8_t a;
 
-    Color()                              = default;
-    Color &operator=(const Color &color) = default;
-    Color(const Color &color)            = default;
-
-    Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a);
-    ~Color() = default;
-
+    Color() = default;
+    Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a = 255u);
 
     Color &operator+=(const Color &color);
     Color &operator*=(const Color &color);
@@ -58,15 +56,16 @@ class Drawable
 public:
     virtual ~Drawable() = default;
 
-    virtual void draw(ARenderWindow *window) = 0;
+    virtual void draw(IRenderWindow *window) = 0;
 };
 
-class AImage : public Drawable
+class IPixelsArray : public Drawable
 {
 public:
-    virtual ~AImage() = default;
+    virtual ~IPixelsArray() = default;
 
     virtual void setColor(const Color &color, size_t ind) = 0;
+    virtual Color getColor(size_t ind) const = 0;
 
     virtual void setPosition(const vec2i &coord, size_t ind) = 0;
     virtual void setPosition(const vec2f &coord, size_t ind) = 0;
@@ -74,6 +73,32 @@ public:
     virtual void setPosition(int x, int y, size_t ind) = 0;
     virtual void setPosition(float x, float y, size_t ind) = 0;
     virtual void setPosition(double x, double y, size_t ind) = 0;
+
+    // have to be implemented in cpp so that we can call it and get correct value
+    static std::unique_ptr<IPixelsArray> create();
+};
+
+class IImage : public Drawable
+{
+public:
+    virtual ~IImage() = default;
+
+    virtual void create(unsigned int width, unsigned int height, const Color &color=Color(0, 0, 0));
+    virtual void create(vec2u size, const Color &color=Color(0, 0, 0));
+
+    virtual void create(unsigned int width, unsigned int height, const Color *pixels);
+    virtual void create(vec2u size, const Color *pixels);
+
+    virtual bool loadFromFile(const std::string &filename) = 0;
+
+    virtual vec2u getSize() const;
+    virtual void setPixel(unsigned int x, unsigned int y, const Color &color);
+    virtual void setPixel(vec2u pos, const Color &color);
+
+    virtual Color getPixel(unsigned int x, unsigned int y) const;
+    virtual Color getPixel(vec2u pos) const;
+
+    static std::unique_ptr<IImage> create();
 };
 
 struct IntRect
@@ -84,35 +109,37 @@ struct IntRect
     int height;
 };
 
-class ATexture
+class ITexture
 {
 public:
-    virtual ~ATexture() = default;
+    virtual ~ITexture() = default;
 
     virtual bool create(unsigned int width, unsigned int height)                                     = 0;
     virtual bool loadFromFile  (const std::string& filename,        const IntRect& area = IntRect()) = 0;
     virtual bool loadFromMemory(const void* data, std::size_t size, const IntRect& area = IntRect()) = 0;
-    virtual bool loadFromImage (const AImage *image,                const IntRect& area = IntRect()) = 0;
     virtual vec2u getSize() const                                                                    = 0;
-    virtual std::unique_ptr<AImage> copyToImage() const                                              = 0;
+    virtual std::unique_ptr<IImage> copyToImage() const                                              = 0;
+    virtual void update(const IImage *image)                                                         = 0;
     virtual void update(const Color *pixels)                                                         = 0;
     virtual void update(const Color *pixels, unsigned int width, unsigned int height,
                                              unsigned int x,     unsigned int y) = 0;
-    virtual ATexture& operator =(const ATexture& right) = 0;
+
+    static std::unique_ptr<ITexture> create();
 };
 
-class ASprite : public Drawable
+class ISprite : public Drawable
 {
 public:
-    virtual ~ASprite() = default;
+    virtual ~ISprite() = default;
 
-    virtual void setTexture(const ATexture *texture, bool reset_rect = false) = 0;
+    virtual void setTexture(const ITexture *texture, bool reset_rect = false) = 0;
     virtual void setTextureRect(const IntRect &rectangle) = 0;
 
     virtual void setPosition(float x, float y) = 0;
     virtual void setPosition(const vec2f &pos) = 0;
 
     virtual void setScale(float factorX, float factorY) = 0;
+    virtual vec2i getSize() const = 0;
 
     virtual void setColor(const Color &color) = 0;
 
@@ -121,18 +148,22 @@ public:
     virtual const vec2f getPosition() const = 0;
     virtual IntRect getGlobalBounds() const = 0;
 
-    virtual void draw(ARenderWindow *window) = 0;
+    virtual void draw(IRenderWindow *window) = 0;
+
+    static std::unique_ptr<ISprite> create();
 };
 
-class AFont
+class IFont
 {
 public:
-    virtual ~AFont() = default;
+    virtual ~IFont() = default;
 
     virtual bool loadFromFile(const std::string& filename) = 0;
+
+    static std::unique_ptr<IFont> create();
 };
 
-class AText : public Drawable
+class IText : public Drawable
 {
 public:
     enum Style
@@ -144,31 +175,37 @@ public:
         StrikeThrough = 1 << 3
     };
 
-    virtual ~AText() = default;
+    virtual ~IText() = default;
 
-    virtual void draw(ARenderWindow *window)          = 0;
+    virtual void draw(IRenderWindow *window)          = 0;
     virtual void setString(const std::string& string) = 0;
-    virtual void setFont(const AFont* font)           = 0;
+    virtual void setFont(const IFont* font)           = 0;
     virtual void setCharacterSize(unsigned int size)  = 0;
     virtual void setStyle(uint32_t style)             = 0;
     virtual void setFillColor(const Color* color)     = 0;
     virtual void setOutlineColor(const Color* color)  = 0;
     virtual void setOutlineThickness(float thickness) = 0;
+
+    static std::unique_ptr<IText> create();
 };
 
-class ARenderWindow
+class IRenderWindow
 {
 public:
-    virtual ~ARenderWindow() = default;
+    virtual ~IRenderWindow() = default;
 
     virtual bool isOpen()  = 0;
     virtual void clear()   = 0;
     virtual void display() = 0;
     virtual void close()   = 0;
 
+    virtual vec2u getSize() const = 0;
+
     virtual bool pollEvent(Event& event) = 0;
 
     virtual void draw(Drawable *target) = 0;
+
+    static std::unique_ptr<IRenderWindow> create(unsigned int width, unsigned int height, const std::string& name);
 };
 
 class Mouse
@@ -195,10 +232,10 @@ public:
     static bool isButtonPressed(Button button);
 
     static vec2i getPosition();
-    static vec2i getPosition(const ARenderWindow *relative_to);
+    static vec2i getPosition(const IRenderWindow *relative_to);
 
     static void setPosition(const vec2i &position);
-    static void setPosition(const vec2i &position, const ARenderWindow *relative_to);
+    static void setPosition(const vec2i &position, const IRenderWindow *relative_to);
 };
 
 class Keyboard
@@ -375,6 +412,7 @@ public:
         MouseMoved,
         MouseEntered,
         MouseLeft,
+        None,
     };
 
     EventType type;

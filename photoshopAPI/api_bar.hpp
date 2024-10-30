@@ -14,24 +14,30 @@ public:
         Normal,
         Hover,
         Press,
-        On,
+        Released,
     };
 
-    virtual State state() = 0; // return state
+    virtual void setState(State state) = 0;
+    virtual State getState() const = 0; // return state
 };
 
-class IBar : public IWindowVector {
-public:
-    virtual vec2i getNextChildPos()  const = 0;
-    virtual vec2i getNextChildSize() const = 0;
+struct ChildInfo
+{
+    vec2i pos;
+    vec2i size;
+};
 
-    virtual void finishButtonDraw(ARenderWindow* renderWindow, const IBarButton* button) = 0; 
+class IBar : public IWindowContainer {
+public:
+    virtual ChildInfo getNextChildInfo() const = 0;
+
+    virtual void finishButtonDraw(IRenderWindow* renderWindow, const IBarButton* button) = 0;
 };
 
 /*
 finishButtonDraw basic implementation is supposed to be something like this:
 
-void IBar::finishButtonDraw(ARenderWindow* renderWindow, const IBarButton* aButton) {
+void IBar::finishButtonDraw(IRenderWindow* renderWindow, const IBarButton* aButton) {
     switch (button->state()) {
         case IBarButton::State::Normal:
             break;
@@ -41,20 +47,20 @@ void IBar::finishButtonDraw(ARenderWindow* renderWindow, const IBarButton* aButt
         case IBarButton::State::Press:
             renderWindow->draw(pressSprite);
             break;
-        case IBarButton::State::On:
+        case IBarButton::State::Released
             renderWindow->draw(onSprite);
             break;
     }
 }
 
 usage:
-void ConcreteButton::draw(ARenderWindow* renderWindow) {
+void ConcreteButton::draw(IRenderWindow* renderWindow) {
     ... // draw logic
 
     parent->finishButtonDraw(renderWindow, this);
 }
 
-Idea: buttons in one bar are usually supposed to be pretty the same (e.g on hover they become blue, 
+Idea: buttons in one bar are usually supposed to be pretty the same (e.g on hover they become blue,
     on release - gray. In order to make these buttons be similar, toolbar can finish their drawing based on state)
 
 */
