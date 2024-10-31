@@ -62,7 +62,9 @@ bool ABarButton::update(const psapi::IRenderWindow* renderWindow,
     // FIXME: rewrite logic
     if (is_in_window && event.type == psapi::sfm::Event::MouseButtonReleased) {
         if (state_ == psapi::IBarButton::State::Press) {
-            state_ = psapi::IBarButton::State::Released;
+            if (action_->activate()) {
+                state_ = psapi::IBarButton::State::Released;
+            }
             return true;
         }
         if (state_ == psapi::IBarButton::State::Released) {
@@ -104,8 +106,10 @@ psapi::vec2i ABarButton::getPos() const {
     return pos_;
 }
 
-psapi::vec2i ABarButton::getSize() const {
-    return size_;
+psapi::vec2u ABarButton::getSize() const {
+    psapi::vec2u size = {static_cast<unsigned int>(size_.x),
+                         static_cast<unsigned int>(size_.y)};
+    return size;
 }
 
 psapi::wid_t ABarButton::getId() const {
@@ -134,6 +138,10 @@ ABarButton::State ABarButton::getState() const {
 
 bool ABarButton::isWindowContainer() const {
     return false;
+}
+
+bool ABarButton::isActive() const {
+    return is_active_;
 }
 
 // ABar implementation
@@ -180,7 +188,7 @@ void ABar::drawMyself(psapi::IRenderWindow* renderWindow) {
     sprite_->setPosition(static_cast<float>(pos_.x),
                          static_cast<float>(pos_.y));
 
-    psapi::vec2i current_size = sprite_->getSize();
+    psapi::vec2u current_size = sprite_->getSize();
 
     float factor_x = static_cast<float>(current_size.x) / static_cast<float>(size_.x);
     float factor_y = static_cast<float>(current_size.y) / static_cast<float>(size_.y);
@@ -268,8 +276,10 @@ psapi::vec2i ABar::getPos()  const {
     return pos_;
 }
 
-psapi::vec2i ABar::getSize() const {
-    return size_;
+psapi::vec2u ABar::getSize() const {
+    psapi::vec2u size = {static_cast<unsigned int>(size_.x),
+                         static_cast<unsigned int>(size_.y)};
+    return size;
 }
 
 psapi::wid_t ABar::getId() const {
@@ -321,7 +331,7 @@ psapi::ChildInfo ABar::getNextChildInfo() const {
 }
 
 void ABar::finishButtonDraw(psapi::IRenderWindow* renderWindow,
-                            const psapi::IBarButton* button) {
+                            const psapi::IBarButton* button) const {
 
     psapi::vec2i button_pos = button->getPos();
     auto posf_x = static_cast<float>(button_pos.x);
@@ -350,4 +360,8 @@ void ABar::finishButtonDraw(psapi::IRenderWindow* renderWindow,
             assert(0);
             break;
     }
+}
+
+bool ABar::isActive() const {
+    return is_active_;
 }

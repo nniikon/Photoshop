@@ -83,7 +83,7 @@ psapi::vec2i RootWindow::getPos() const {
     return {0, 0};
 }
 
-psapi::vec2i RootWindow::getSize() const {
+psapi::vec2u RootWindow::getSize() const {
     return {0, 0};
 }
 
@@ -97,6 +97,10 @@ void RootWindow::forceActivate() {
 
 void RootWindow::forceDeactivate() {
     //LOG_S(ERROR) << "You cannot deactivate the root window.";
+}
+
+bool RootWindow::isActive() const {
+    return true;
 }
 
 // getRootwindow singleton implementation

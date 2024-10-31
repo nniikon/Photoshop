@@ -2,9 +2,7 @@
 #define API_CANVAS_HPP
 
 #include "api_photoshop.hpp"
-#include "api_sfm.hpp"
 
-#include <cstdint>
 #include <memory>
 
 namespace psapi {
@@ -13,12 +11,15 @@ const wid_t kCanvasWindowId = 100;
 
 class ILayer {
 public:
+    virtual ~ILayer() = default;
     virtual sfm::Color getPixel(sfm::vec2i pos) const = 0;
     virtual void       setPixel(sfm::vec2i pos, sfm::Color pixel) = 0;
 };
 
 class ICanvas : public IWindow {
 public:
+    virtual ~ICanvas() = default;
+
     virtual ILayer*       getLayer(size_t index)       = 0;
     virtual const ILayer* getLayer(size_t index) const = 0;
 

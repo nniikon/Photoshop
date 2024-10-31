@@ -11,6 +11,18 @@
 #include <memory>
 #include <vector>
 
+static const psapi::sfm::vec2f CanvasTopLeftPos = psapi::sfm::vec2f(0.15f, 0.30f);
+static const psapi::sfm::vec2f CanvasSize       = psapi::sfm::vec2f(0.70f, 0.70f);
+
+static const psapi::sfm::vec2f ToolbarTopLeftPos = psapi::sfm::vec2f(0.00f, 0.00f);
+static const psapi::sfm::vec2f ToolbarSize       = psapi::sfm::vec2f(0.15f, 1.00f);
+
+static const psapi::sfm::vec2f OptionBarTopLeftPos = psapi::sfm::vec2f(0.15f, 0.00f);
+static const psapi::sfm::vec2f OptionBarSize       = psapi::sfm::vec2f(0.15f, 1.f);
+
+static const psapi::sfm::vec2f InstrumentOptionsTopLeftPos = psapi::sfm::vec2f(0.15f, 0.15f);
+static const psapi::sfm::vec2f InstrumentOptionsSize       = psapi::sfm::vec2f(0.15f, 0.15f);
+
 namespace psapi {
 
 namespace sfm {
@@ -26,7 +38,9 @@ using sfm::Event;
  */
 using wid_t = int64_t;
 
+
 const wid_t kRootWindowId = 0;
+
 
 using sfm::vec2i;
 using sfm::vec2u;
@@ -87,7 +101,7 @@ public:
      * @brief Gets the size of the window.
      * @return The window size as a vec2i.
      */
-    virtual vec2i getSize() const = 0;
+    virtual vec2u getSize() const = 0;
 
     /**
      * @brief Sets the parent of this window.
@@ -104,6 +118,11 @@ public:
      * @brief Forces the window to deactivate.
      */
     virtual void forceDeactivate() = 0;
+
+    /**
+     * @brief Checks whether the window is active.
+     */
+    virtual bool isActive() const = 0;
 
     /**
      * @brief Checks if the window is a window container.

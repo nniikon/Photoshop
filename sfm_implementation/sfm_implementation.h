@@ -17,20 +17,25 @@ private:
 
     friend class Text;
     friend class Sprite;
+    friend class RectangleShape;
+    friend class EllipseShape;
     friend class psapi::sfm::Mouse;
 
 public:
     RenderWindow(unsigned int width, unsigned int height, const std::string& title);
-    virtual ~RenderWindow() = default;
+    ~RenderWindow() = default;
 
-    bool isOpen()                override;
+    bool isOpen()          const override;
     void clear()                 override;
     void display()               override;
     void close()                 override;
-    vec2u getSize() const        override;
+    vec2u getSize()        const override;
     bool pollEvent(Event& event) override;
 
     void draw(Drawable *target) override;
+
+    void  setFps(float fps) override;
+    float getFps()    const override;
 
     static std::unique_ptr<IRenderWindow>
         create(unsigned int width, unsigned int height, const std::string& name);
@@ -38,19 +43,19 @@ public:
 
 class PixelsArray : public IPixelsArray {
 public:
-    virtual ~PixelsArray() = default;
+    ~PixelsArray() = default;
 
-    virtual void setColor(const Color &color, size_t ind) override;
-    virtual Color getColor(size_t ind) const override;
+    void setColor(const Color &color, size_t ind) override;
+    Color getColor(size_t ind) const override;
 
-    virtual void setPosition(const vec2i &coord, size_t ind) override;
-    virtual void setPosition(const vec2f &coord, size_t ind) override;
-    virtual void setPosition(const vec2d &coord, size_t ind) override;
-    virtual void setPosition(int    x, int    y, size_t ind) override;
-    virtual void setPosition(float  x, float  y, size_t ind) override;
-    virtual void setPosition(double x, double y, size_t ind) override;
+    void setPosition(const vec2i &coord, size_t ind) override;
+    void setPosition(const vec2f &coord, size_t ind) override;
+    void setPosition(const vec2d &coord, size_t ind) override;
+    void setPosition(int    x, int    y, size_t ind) override;
+    void setPosition(float  x, float  y, size_t ind) override;
+    void setPosition(double x, double y, size_t ind) override;
 
-    virtual void draw(IRenderWindow *window) override;
+    void draw(IRenderWindow *window) const override;
 
     static std::unique_ptr<IPixelsArray> create();
 };
@@ -74,8 +79,6 @@ public:
 
     Color getPixel(unsigned int x, unsigned int y) const override;
     Color getPixel(vec2u pos)                      const override;
-
-    virtual void draw(IRenderWindow *window) override;
 
     static std::unique_ptr<IImage> create();
 
@@ -118,15 +121,20 @@ public:
 
     void setTexture(const ITexture *texture, bool reset_rect = false) override;
     void setTextureRect(const IntRect &rectangle) override;
+
     void setPosition(float x, float y) override;
     void setPosition(const vec2f &pos) override;
+
     void setScale(float factorX, float factorY) override;
-    vec2i getSize() const override;
+    vec2u getSize() const override;
+
     void setColor(const Color &color) override;
+    Color getColor() const override;
+
     void setRotation(float angle) override;
     const vec2f getPosition() const override;
     IntRect getGlobalBounds() const override;
-    void draw(IRenderWindow *window) override;
+    void draw(IRenderWindow *window) const override;
 };
 
 class Font : public IFont {
@@ -148,7 +156,7 @@ private:
 public:
     virtual ~Text() = default;
 
-    void draw(IRenderWindow *window) override;
+    void draw(IRenderWindow *window) const override;
     void setString(const std::string& string) override;
     void setFont(const IFont* font) override;
     void setCharacterSize(unsigned int size) override;
@@ -156,6 +164,81 @@ public:
     void setFillColor(const Color* color) override;
     void setOutlineColor(const Color* color) override;
     void setOutlineThickness(float thickness) override;
+};
+
+class RectangleShape : public IRectangleShape {
+public:
+    RectangleShape(unsigned int width, unsigned int height);
+    RectangleShape(const vec2u &size);
+
+    void draw(IRenderWindow *window) const override;
+
+    void setTexture(const ITexture *texture) override;
+    void setFillColor(const Color &color) override;
+    void setPosition(const vec2i &pos) override;
+    void setPosition(const vec2f &pos) override;
+    void setPosition(const vec2d &pos) override;
+    void setScale(const vec2f &scale) override;
+    void setSize(const vec2u &size) override;
+    void setRotation(float angle) override;
+    void setOutlineColor(const Color &color) override;
+    void setOutlineThickness(float thickness) override;
+
+    float getRotation() const override;
+    vec2f getScale() const override;
+    vec2f getPosition() const override;
+    const Color &getFillColor() const override;
+    vec2u getSize() const override;
+    float getOutlineThickness() const override;
+    const Color &getOutlineColor() const override;
+    const IImage *getImage() const override;
+
+    void move(const vec2f &offset) override;
+
+private:
+    sf::RectangleShape shape;
+    mutable std::unique_ptr<IImage> cachedImage;
+    mutable bool imageNeedsUpdate = true;
+
+    void updateImage() const;
+};
+
+class EllipseShape : public IEllipseShape {
+public:
+    EllipseShape(unsigned int width, unsigned int height);
+    EllipseShape(const vec2u &size);
+    EllipseShape(unsigned int radius);
+
+    void draw(IRenderWindow *window) const override;
+
+    void setTexture(const ITexture *texture) override;
+    void setFillColor(const Color &color) override;
+    void setPosition(const vec2i &pos) override;
+    void setPosition(const vec2f &pos) override;
+    void setPosition(const vec2d &pos) override;
+    void setScale(const vec2f &scale) override;
+    void setSize(const vec2u &size) override;
+    void setRotation(float angle) override;
+    void setOutlineColor(const Color &color) override;
+    void setOutlineThickness(float thickness) override;
+
+    float getRotation() const override;
+    vec2f getScale() const override;
+    vec2f getPosition() const override;
+    const Color &getFillColor() const override;
+    vec2u getSize() const override;
+    float getOutlineThickness() const override;
+    const Color &getOutlineColor() const override;
+    const IImage *getImage() const override;
+
+    void move(const vec2f &offset) override;
+
+private:
+    sf::CircleShape shape;
+    mutable std::unique_ptr<IImage> cachedImage;
+    mutable bool imageNeedsUpdate = true;
+
+    void updateImage() const;
 };
 
 } // namespace sfm

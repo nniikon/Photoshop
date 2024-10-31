@@ -31,7 +31,7 @@ class IBar : public IWindowContainer {
 public:
     virtual ChildInfo getNextChildInfo() const = 0;
 
-    virtual void finishButtonDraw(IRenderWindow* renderWindow, const IBarButton* button) = 0;
+    virtual void finishButtonDraw(IRenderWindow* renderWindow, const IBarButton* button) const = 0;
 };
 
 /*

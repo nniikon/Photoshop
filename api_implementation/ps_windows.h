@@ -13,10 +13,12 @@ public:
     virtual int64_t getId() const override;
 
     virtual psapi::vec2i getPos()  const          override;
-    virtual psapi::vec2i getSize() const          override;
+    virtual psapi::vec2u getSize() const          override;
     virtual void setParent(const IWindow* parent) override;
     virtual void forceActivate()                  override;
     virtual void forceDeactivate()                override;
+
+    virtual bool isActive() const override;
 
 private:
     bool is_active_ = true;

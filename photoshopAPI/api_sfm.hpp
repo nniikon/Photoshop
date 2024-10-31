@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <memory>
+#include "api_system.hpp"
 
 namespace psapi
 {
@@ -13,50 +14,12 @@ namespace sfm
 class Event;
 class IRenderWindow;
 
-template<typename T>
-struct Vec2D
-{
-    T x;
-    T y;
-    Vec2D<T>(T init_x, T init_y)
-        : x(init_x), y(init_y) {}
-    Vec2D<T>() = default;
-};
-
-using vec2i = Vec2D<int>;
-using vec2u = Vec2D<unsigned int>;
-using vec2f = Vec2D<float>;
-using vec2d = Vec2D<double>;
-
-struct Color
-{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t a;
-
-    Color() = default;
-    Color(uint8_t init_r, uint8_t init_g, uint8_t init_b, uint8_t init_a = 255u);
-
-    Color &operator+=(const Color &color);
-    Color &operator*=(const Color &color);
-    Color &operator*=(const double cf);
-    Color &operator*=(const float cf);
-};
-
-Color operator+(const Color &x, const Color &y);
-Color operator*(const Color &x, const Color &y);
-Color operator*(const Color &x, const float cf);
-Color operator*(const Color &x, const double cf);
-Color operator*(const float cf, const Color &x);
-Color operator*(const double cf, const Color &x);
-
 class Drawable
 {
 public:
     virtual ~Drawable() = default;
 
-    virtual void draw(IRenderWindow *window) = 0;
+    virtual void draw(IRenderWindow *window) const = 0;
 };
 
 class IPixelsArray : public Drawable
@@ -78,25 +41,26 @@ public:
     static std::unique_ptr<IPixelsArray> create();
 };
 
-class IImage : public Drawable
+
+class IImage
 {
 public:
     virtual ~IImage() = default;
 
-    virtual void create(unsigned int width, unsigned int height, const Color &color=Color(0, 0, 0));
-    virtual void create(vec2u size, const Color &color=Color(0, 0, 0));
+    virtual void create(unsigned int width, unsigned int height, const Color &color=Color(0, 0, 0)) = 0;
+    virtual void create(vec2u size, const Color &color=Color(0, 0, 0)) = 0;
 
-    virtual void create(unsigned int width, unsigned int height, const Color *pixels);
-    virtual void create(vec2u size, const Color *pixels);
+    virtual void create(unsigned int width, unsigned int height, const Color *pixels) = 0;
+    virtual void create(vec2u size, const Color *pixels) = 0;
 
     virtual bool loadFromFile(const std::string &filename) = 0;
 
-    virtual vec2u getSize() const;
-    virtual void setPixel(unsigned int x, unsigned int y, const Color &color);
-    virtual void setPixel(vec2u pos, const Color &color);
+    virtual vec2u getSize() const = 0;
+    virtual void setPixel(unsigned int x, unsigned int y, const Color &color) = 0;
+    virtual void setPixel(vec2u pos, const Color &color) = 0;
 
-    virtual Color getPixel(unsigned int x, unsigned int y) const;
-    virtual Color getPixel(vec2u pos) const;
+    virtual Color getPixel(unsigned int x, unsigned int y) const = 0;
+    virtual Color getPixel(vec2u pos) const = 0;
 
     static std::unique_ptr<IImage> create();
 };
@@ -139,16 +103,16 @@ public:
     virtual void setPosition(const vec2f &pos) = 0;
 
     virtual void setScale(float factorX, float factorY) = 0;
-    virtual vec2i getSize() const = 0;
+    virtual vec2u getSize() const = 0;
 
     virtual void setColor(const Color &color) = 0;
+    virtual Color getColor() const = 0;
 
     virtual void setRotation(float angle) = 0;
 
     virtual const vec2f getPosition() const = 0;
     virtual IntRect getGlobalBounds() const = 0;
 
-    virtual void draw(IRenderWindow *window) = 0;
 
     static std::unique_ptr<ISprite> create();
 };
@@ -177,7 +141,6 @@ public:
 
     virtual ~IText() = default;
 
-    virtual void draw(IRenderWindow *window)          = 0;
     virtual void setString(const std::string& string) = 0;
     virtual void setFont(const IFont* font)           = 0;
     virtual void setCharacterSize(unsigned int size)  = 0;
@@ -194,7 +157,7 @@ class IRenderWindow
 public:
     virtual ~IRenderWindow() = default;
 
-    virtual bool isOpen()  = 0;
+    virtual bool isOpen() const = 0;
     virtual void clear()   = 0;
     virtual void display() = 0;
     virtual void close()   = 0;
@@ -205,7 +168,61 @@ public:
 
     virtual void draw(Drawable *target) = 0;
 
+    virtual void setFps(float fps) = 0;
+    virtual float getFps() const = 0;
+
     static std::unique_ptr<IRenderWindow> create(unsigned int width, unsigned int height, const std::string& name);
+};
+
+
+class IShape : public Drawable
+{
+public:
+    virtual ~IShape() = default;
+
+    virtual void setTexture(const ITexture *texture) = 0;
+    virtual void setFillColor(const Color &color) = 0;
+
+    virtual void setPosition(const vec2i &pos) = 0;
+    virtual void setPosition(const vec2f &pos) = 0;
+    virtual void setPosition(const vec2d &pos) = 0;
+    virtual void setScale(const vec2f &scale) = 0;
+    virtual void setSize(const vec2u &size) = 0;
+    virtual void setRotation(float angle) = 0;
+    virtual void setOutlineColor(const Color &color) = 0;
+    virtual void setOutlineThickness(float thickness) = 0;
+
+    virtual float getRotation() const = 0;
+    virtual vec2f getScale() const = 0;
+    virtual vec2f getPosition() const = 0;
+    virtual const Color &getFillColor() const = 0;
+    virtual vec2u getSize() const = 0;
+    virtual float getOutlineThickness() const = 0;
+    virtual const Color &getOutlineColor() const = 0;
+    virtual const IImage *getImage() const = 0;
+
+    virtual void move(const vec2f &offset) = 0;
+};
+
+
+class IRectangleShape : public IShape
+{
+public:
+    virtual ~IRectangleShape() = default;
+
+    static std::unique_ptr<IRectangleShape> create(unsigned int width = 0, unsigned int height = 0);
+    static std::unique_ptr<IRectangleShape> create(const vec2u &size = vec2u(0, 0));
+};
+
+
+class IEllipseShape : public IShape
+{
+public:
+    virtual ~IEllipseShape() = default;
+
+    static std::unique_ptr<IEllipseShape> create(unsigned int width = 0, unsigned int height = 0);
+    static std::unique_ptr<IEllipseShape> create(const vec2u &size = vec2u(0, 0));
+    static std::unique_ptr<IEllipseShape> create(unsigned int radius); // creates ellipse with width == height == radius - circle
 };
 
 class Mouse

@@ -7,8 +7,9 @@ namespace ps {
 
 class ButtonAction {
 public:
-    virtual bool operator()(const psapi::IRenderWindow* renderWindow, 
+    virtual bool operator()(const psapi::IRenderWindow* renderWindow,
                             const psapi::sfm::Event& event) = 0;
+    virtual bool activate() = 0;
     virtual ~ButtonAction() = default;
 };
 
@@ -29,7 +30,7 @@ public:
     virtual const psapi::IWindow* getWindowById(psapi::wid_t id) const override;
 
     virtual psapi::vec2i getPos()  const override;
-    virtual psapi::vec2i getSize() const override;
+    virtual psapi::vec2u getSize() const override;
 
     virtual void setParent(const IWindow* parent) override;
 
@@ -40,6 +41,8 @@ public:
     virtual State getState()      const override;
 
     virtual bool isWindowContainer() const override;
+
+    virtual bool isActive() const override;
 
 protected:
     psapi::wid_t id_ = psapi::kInvalidWindowId;
@@ -83,7 +86,7 @@ public:
     virtual const psapi::IWindow* getWindowById(psapi::wid_t id) const override;
 
     virtual psapi::vec2i getPos()  const override;
-    virtual psapi::vec2i getSize() const override;
+    virtual psapi::vec2u getSize() const override;
     virtual psapi::wid_t getId()   const override;
 
     virtual void setParent(const IWindow* parent) override;
@@ -96,7 +99,9 @@ public:
     virtual psapi::ChildInfo getNextChildInfo() const override;
 
     virtual void finishButtonDraw(psapi::IRenderWindow* renderWindow,
-                                  const psapi::IBarButton* button) override;
+                                  const psapi::IBarButton* button) const override;
+
+    virtual bool isActive() const override;
 
 protected:
     psapi::wid_t id_ = psapi::kInvalidWindowId;

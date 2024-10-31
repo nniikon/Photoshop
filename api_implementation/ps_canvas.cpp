@@ -3,6 +3,7 @@
 #define LOGURU_WITH_STREAMS 1
 #include "loguru.hpp"
 
+#include "sfm_implementation.h"
 #include <cassert>
 
 using namespace ps;
@@ -77,12 +78,12 @@ Canvas::Canvas(vec2i size, vec2i pos)
 
     for (int x = 0; x < size_.x; x++) {
         for (int y = 0; y < size_.y; y++) {
-            temp_layer_->setPixel({x, y}, {120, 120, 120, 120});
+            temp_layer_->setPixel({x, y}, {255, 255, 255, 0});
         }
     }
     for (int x = 0; x < size_.x; x++) {
         for (int y = 0; y < size_.y; y++) {
-            layers_.back()->setPixel({x, y}, {120, 120, 120, 120});
+            layers_.back()->setPixel({x, y}, {255, 255, 255, 255});
         }
     }
 }
@@ -162,8 +163,10 @@ vec2i Canvas::getPos() const {
     return pos_;
 }
 
-vec2i Canvas::getSize() const {
-    return size_;
+vec2u Canvas::getSize() const {
+    vec2u size = {static_cast<unsigned int>(size_.x),
+                  static_cast<unsigned int>(size_.y)};
+    return size;
 }
 
 void Canvas::setParent(const IWindow* parent) {
@@ -285,4 +288,8 @@ vec2i Canvas::getMousePosition() const {
 
 bool Canvas::isPressed() const {
     return is_pressed_;
+}
+
+bool Canvas::isActive() const {
+    return is_active_;
 }

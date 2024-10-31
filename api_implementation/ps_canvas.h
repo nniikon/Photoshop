@@ -3,12 +3,12 @@
 
 #include "api_canvas.hpp"
 #include "api_sfm.hpp"
-#include "sfm_implementation.h"
 
 namespace ps {
 
 using psapi::sfm::Color;
 using psapi::sfm::vec2i;
+using psapi::sfm::vec2u;
 using psapi::sfm::vec2f;
 
 using psapi::sfm::ITexture;
@@ -48,7 +48,7 @@ public:
     IWindow* getWindowById(psapi::wid_t id)             override;
     const IWindow* getWindowById(psapi::wid_t id) const override;
     vec2i getPos()                                const override;
-    vec2i getSize()                               const override;
+    vec2u getSize()                               const override;
     void setParent(const IWindow* parent)               override;
     void forceActivate()                                override;
     void forceDeactivate()                              override;
@@ -76,6 +76,8 @@ public:
 
     virtual vec2i getMousePosition() const override;
     virtual bool  isPressed()        const override;
+
+    virtual bool isActive() const override;
 
 private:
     size_t active_layer_ = 0;
