@@ -15,6 +15,7 @@ public:
     BrushAction();
     virtual bool operator()(const psapi::IRenderWindow* renderWindow,
                             const psapi::sfm::Event& event) override;
+    virtual bool activate() override;
 
 private:
     psapi::ICanvas* canvas_ = nullptr;

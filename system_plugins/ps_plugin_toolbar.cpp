@@ -19,7 +19,7 @@ constexpr psapi::sfm::IntRect kActiveButtonTextureArea  = {256, 128, 64,  64};
     
 bool loadPlugin() {
 
-    texture = psapi::sfm::Texture::create().release();
+    texture = psapi::sfm::ITexture::create().release();
     texture->loadFromFile("./assets/toolbar.png");
 
     std::unique_ptr<psapi::sfm::ISprite> toolbar_sprite = psapi::sfm::Sprite::create();

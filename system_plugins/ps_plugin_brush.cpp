@@ -5,7 +5,7 @@
 
 constexpr psapi::sfm::IntRect kBrushButtonTextureArea = {0, 0, 64, 64};
 
-constexpr int kBrushRadius = 1;
+constexpr int kBrushRadius = 10;
 static psapi::sfm::ITexture* texture = nullptr;
 
 BrushAction::BrushAction() {
@@ -31,16 +31,16 @@ void BrushAction::paintAtPosition(const psapi::sfm::vec2i& position) {
     }
 }
 
-
 // Hermite spline interpolation 
 //      https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull%E2%80%93Rom_spline
 psapi::sfm::vec2i BrushAction::interpolateHermite(const MousePoint& p0, const MousePoint& p1,
                                                   const MousePoint& p2, const MousePoint& p3,
                                                   float t) {
-    LOG_F(INFO, "mouse points: p0(%f, %f), p1(%f, %f), p2(%f, %f), p3(%f, %f), t=%f",
-           p0.position.x, p0.position.y, p1.position.x, p1.position.y,
-           p2.position.x, p2.position.y, p3.position.x, p3.position.y,
-           t);
+    // LOG_F(INFO, "mouse points: p0(%f, %f), p1(%f, %f), p2(%f, %f), p3(%f, %f), t=%f",
+    //        p0.position.x, p0.position.y, p1.position.x, p1.position.y,
+    //        p2.position.x, p2.position.y, p3.position.x, p3.position.y,
+    //        t);
+
     float t2 = t * t;
     float t3 = t2 * t;
 
@@ -122,8 +122,12 @@ bool BrushAction::operator()(const psapi::IRenderWindow* renderWindow,
     return true;
 }
 
+bool BrushAction::activate() {
+    return true;
+}
+
 bool loadPlugin() {
-    texture = psapi::sfm::Texture::create().release();
+    texture = psapi::sfm::ITexture::create().release();
     texture->loadFromFile("./assets/buttons.png");
 
     auto toolbar_sprite = psapi::sfm::Sprite::create();

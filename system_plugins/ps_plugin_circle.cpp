@@ -1,18 +1,18 @@
-#include "ps_plugin_line.h"
+#include "ps_plugin_circle.h"
 #include "ps_plugin_brush.h"
 
-#include <immintrin.h>
+#include "ps_canvas.h"
+#include "sfm_implementation.h"
 
 #define LOGURU_WITH_STREAMS 1
 #include "loguru.hpp"
 
-#undef LOG_F
-#define LOG_F(...) (void)0
+#include <cmath>
 
 static psapi::sfm::ITexture* texture = nullptr;
 
-LineAction::LineAction()
-    : rect_(psapi::sfm::IRectangleShape::create(1, 1)),
+EllipseAction::EllipseAction()
+    : ellipse_(psapi::sfm::IEllipseShape::create(1, 1)),
       is_mouse_down_(false) {
 
     canvas_ = static_cast<psapi::ICanvas*>(
@@ -20,8 +20,8 @@ LineAction::LineAction()
     );
 }
 
-bool LineAction::operator()(const psapi::IRenderWindow* renderWindow,
-                            const psapi::sfm::Event& event) {
+bool EllipseAction::operator()(const psapi::IRenderWindow* renderWindow,
+                               const psapi::sfm::Event& event) {
     if (!canvas_)
         return false;
 
@@ -30,7 +30,7 @@ bool LineAction::operator()(const psapi::IRenderWindow* renderWindow,
     }
 
     auto active_layer = canvas_->getLayer(canvas_->getActiveLayerIndex());
-    auto   temp_layer = canvas_->getTempLayer();
+    auto temp_layer = canvas_->getTempLayer();
 
     psapi::sfm::vec2i mouse_pos = canvas_->getMousePosition() + canvas_->getPos();
 
@@ -41,10 +41,8 @@ bool LineAction::operator()(const psapi::IRenderWindow* renderWindow,
         handleMouseReleased(active_layer);
     }
     else if (event.type == psapi::sfm::Event::MouseMoved && is_mouse_down_) {
-        LOG_F(INFO, "Mouse moved to %d, %d", mouse_pos.x, mouse_pos.y);
         if (is_new_frame_) {
             updateTempLayer(temp_layer, mouse_pos);
-
             is_new_frame_ = false;
         }
     }
@@ -54,49 +52,60 @@ bool LineAction::operator()(const psapi::IRenderWindow* renderWindow,
     return true;
 }
 
-bool LineAction::activate() {
+bool EllipseAction::activate() {
     return true;
 }
 
-void LineAction::handleMousePressed(const psapi::sfm::Event& event, const psapi::sfm::vec2i& mouse_pos) {
+void EllipseAction::handleMousePressed(const psapi::sfm::Event& event, const psapi::sfm::vec2i& mouse_pos) {
     if (event.mouseButton.button != psapi::sfm::Mouse::Button::Left) {
         return;
     }
 
     is_mouse_down_ = true;
     mouse_starting_point_ = mouse_pos;
-    initializeRectangle();
+
+    ellipse_->setPosition(mouse_starting_point_);
+    ellipse_->setFillColor(psapi::sfm::Color{0, 0, 255, 255});  // Set the ellipse color
 }
 
-void LineAction::initializeRectangle() {
-    rect_->setPosition(mouse_starting_point_);
-    rect_->setFillColor(psapi::sfm::Color{255, 0, 0, 255});
-}
-
-void LineAction::handleMouseReleased(psapi::ILayer* active_layer) {
+void EllipseAction::handleMouseReleased(psapi::ILayer* active_layer) {
     if (!is_mouse_down_) {
         return;
     }
 
     is_mouse_down_ = false;
-    transferFinalLineToLayer(active_layer);
-
+    transferFinalEllipseToLayer(active_layer);
     clearLayer(canvas_->getTempLayer());
-    rect_->setSize(psapi::sfm::vec2u{1, 1});
-    rect_->setPosition(psapi::sfm::vec2i{0, 0});
+
+    ellipse_->setSize(psapi::sfm::vec2u{1, 1});
+    ellipse_->setPosition(psapi::sfm::vec2i{0, 0});
 }
 
-void LineAction::updateTempLayer(psapi::ILayer* layer, const psapi::sfm::vec2i& current_pos) {
-    float length = 0.f,
-          angle  = 0.f;
-    std::tie(length, angle) = calculateLineVector(current_pos);
-    setupRectangle(length, angle);
+void EllipseAction::updateTempLayer(psapi::ILayer* layer, const psapi::sfm::vec2i& current_pos) {
+    psapi::sfm::vec2i size = {
+        std::abs(current_pos.x - mouse_starting_point_.x),
+        std::abs(current_pos.y - mouse_starting_point_.y)
+    };
+
+    if (size.x == 0 || size.y == 0) {
+        return;
+    }
+
+    ellipse_->setSize(psapi::sfm::vec2u{static_cast<unsigned int>(size.x),
+                                        static_cast<unsigned int>(size.y)});
+    ellipse_->setPosition(psapi::sfm::vec2i{
+        std::min(mouse_starting_point_.x, current_pos.x),
+        std::min(mouse_starting_point_.y, current_pos.y)
+    });
+
+    LOG_F(INFO, "Ellipse size: %d, %d", size.x, size.y);
+    LOG_F(INFO, "Ellipse position: %d, %d", ellipse_->getPosition().x, ellipse_->getPosition().y);
+
     clearLayer(layer);
-    
-    transferFinalLineToLayer(layer);
+    transferFinalEllipseToLayer(layer);
 }
 
-void LineAction::clearLayer(psapi::ILayer* layer) {
+void EllipseAction::clearLayer(psapi::ILayer* layer) {
     size_t width  = canvas_->getSize().x;
     size_t height = canvas_->getSize().y;
 
@@ -109,32 +118,8 @@ void LineAction::clearLayer(psapi::ILayer* layer) {
     }
 }
 
-std::pair<float, float> LineAction::calculateLineVector(const psapi::sfm::vec2i& current_pos) {
-    psapi::sfm::vec2f line_vector = {
-        static_cast<float>(current_pos.x - mouse_starting_point_.x),
-        static_cast<float>(current_pos.y - mouse_starting_point_.y)
-    };
-
-    float length = std::sqrt(line_vector.x * line_vector.x + line_vector.y * line_vector.y);
-    float  angle = std::atan2(line_vector.y, line_vector.x) * 180.0f / M_PIf;
-    return {length, angle};
-}
-
-void LineAction::setupRectangle(float length, float angle) {
-    if (length < 0.1f)
-        return;
-
-    LOG_F(INFO, "Setting up rectangle with length %f and angle %f\n", length, angle);
-
-    rect_->setSize({static_cast<unsigned int>(length), 5});  // Width = length,
-                                                             // height = thickness
-    rect_->setRotation(angle);
-    rect_->setPosition(mouse_starting_point_);
-}
-
-void LineAction::transferFinalLineToLayer(psapi::ILayer* active_layer) {
-
-    auto temp_image = rect_->getImage();
+void EllipseAction::transferFinalEllipseToLayer(psapi::ILayer* active_layer) {
+    auto temp_image = ellipse_->getImage();
     auto text = psapi::sfm::ITexture::create();
 
     unsigned int x_offset = static_cast<unsigned int>(canvas_->getPos().x);
@@ -152,7 +137,7 @@ void LineAction::transferFinalLineToLayer(psapi::ILayer* active_layer) {
     }
 }
 
-constexpr psapi::sfm::IntRect kLineButtonTextureArea = {0, 64, 64, 64};
+constexpr psapi::sfm::IntRect kEllipseButtonTextureArea = {128, 64, 64, 64};
 
 bool loadPlugin() {
     texture = psapi::sfm::ITexture::create().release();
@@ -160,15 +145,15 @@ bool loadPlugin() {
 
     auto toolbar_sprite = psapi::sfm::ISprite::create();
     toolbar_sprite->setTexture(texture);
-    toolbar_sprite->setTextureRect(kLineButtonTextureArea);
+    toolbar_sprite->setTextureRect(kEllipseButtonTextureArea);
 
     auto toolbar = dynamic_cast<psapi::IBar*>(psapi::getRootWindow()->getWindowById(psapi::kToolBarWindowId));
 
-    auto line_action = std::make_unique<LineAction>();
-    auto line_button = std::make_unique<ps::ABarButton>(std::move(toolbar_sprite),
-                                                        toolbar,
-                                                        std::move(line_action));
-    toolbar->addWindow(std::move(line_button));
+    auto ellipse_action = std::make_unique<EllipseAction>();
+    auto ellipse_button = std::make_unique<ps::ABarButton>(std::move(toolbar_sprite),
+                                                           toolbar,
+                                                           std::move(ellipse_action));
+    toolbar->addWindow(std::move(ellipse_button));
 
     return true;
 }

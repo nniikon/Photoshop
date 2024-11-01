@@ -14,6 +14,9 @@ const std::string kPluginPaths[] = {
     "./system_plugins/libplugin_canvas.so",
     "./system_plugins/libplugin_brush.so",
     "./system_plugins/libplugin_line.so",
+    "./system_plugins/libplugin_rectangle.so",
+    "./system_plugins/libplugin_circle.so",
+    "./system_plugins/libplugin_eraser.so",
 };
 
 int loadPlugins();
@@ -30,7 +33,6 @@ int main(int argc, char *argv[]) {
     }
 
     while (window.isOpen()) {
-        uint64_t time1 = __rdtsc();
         sfm::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sfm::Event::Closed) {
@@ -42,13 +44,8 @@ int main(int argc, char *argv[]) {
         getRootWindow()->update(&window, {.type = sfm::Event::None});
         getRootWindow()->draw(&window);
 
-        uint64_t time2 = __rdtsc();
         window.display();
         window.clear();
-        uint64_t time3 = __rdtsc();
-
-
-        // LOG_F(INFO, "Business: %f%%", float(time2 - time1) / float(time3 - time1) * 100.f);
     }
 
     return 0;
