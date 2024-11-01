@@ -84,7 +84,8 @@ void RectangleAction::updateTempLayer(psapi::ILayer* layer, const psapi::sfm::ve
         std::abs(current_pos.y - mouse_starting_point_.y)
     };
 
-    rect_->setSize(psapi::sfm::vec2u{size.x, size.y});
+    rect_->setSize(psapi::sfm::vec2u{static_cast<unsigned int>(size.x),
+                                     static_cast<unsigned int>(size.y)});
     rect_->setPosition(psapi::sfm::vec2i{
         std::min(mouse_starting_point_.x, current_pos.x),
         std::min(mouse_starting_point_.y, current_pos.y)

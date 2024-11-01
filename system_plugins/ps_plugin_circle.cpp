@@ -4,9 +4,6 @@
 #include "ps_canvas.h"
 #include "sfm_implementation.h"
 
-#define LOGURU_WITH_STREAMS 1
-#include "loguru.hpp"
-
 #include <cmath>
 
 static psapi::sfm::ITexture* texture = nullptr;
@@ -86,10 +83,6 @@ void EllipseAction::updateTempLayer(psapi::ILayer* layer, const psapi::sfm::vec2
         std::abs(current_pos.x - mouse_starting_point_.x),
         std::abs(current_pos.y - mouse_starting_point_.y)
     };
-
-    if (size.x == 0 || size.y == 0) {
-        return;
-    }
 
     ellipse_->setSize(psapi::sfm::vec2u{static_cast<unsigned int>(size.x),
                                         static_cast<unsigned int>(size.y)});

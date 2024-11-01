@@ -110,7 +110,7 @@ bool BrushAction::operator()(const psapi::IRenderWindow* renderWindow,
     last_mouse_position_ = current_pos;
 
     psapi::sfm::vec2f current_pos_f = {static_cast<float>(current_pos.x),
-                                     static_cast<float>(current_pos.y)};
+                                       static_cast<float>(current_pos.y)};
 
     float current_time = sTime;
     sTime += kTimeStep;
@@ -127,17 +127,24 @@ bool BrushAction::activate() {
 }
 
 bool loadPlugin() {
-    texture = psapi::sfm::ITexture::create().release();
+    texture = psapi::sfm::ITexture::create().release(); // raii rip
     texture->loadFromFile("./assets/buttons.png");
 
     auto toolbar_sprite = psapi::sfm::Sprite::create();
     toolbar_sprite->setTexture(texture);
     toolbar_sprite->setTextureRect(kBrushButtonTextureArea);
 
-    auto toolbar = dynamic_cast<psapi::IBar*>(psapi::getRootWindow()->getWindowById(psapi::kToolBarWindowId));
+    auto toolbar = dynamic_cast<psapi::IBar*>(
+        psapi::getRootWindow()->getWindowById(psapi::kToolBarWindowId)
+    );
 
     auto brush_action = std::make_unique<BrushAction>();
-    auto brush_button = std::make_unique<ps::ABarButton>(std::move(toolbar_sprite), toolbar, std::move(brush_action));
+    auto brush_button = std::make_unique<ps::ABarButton>(
+        std::move(toolbar_sprite),
+        toolbar,
+        std::move(brush_action)
+    );
+
     toolbar->addWindow(std::move(brush_button));
 
     return true;
