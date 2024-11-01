@@ -8,7 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
-    -Wall \
+    -Wall -O2 \
     -Wmissing-declarations \
     -Wcast-align \
     -Wcast-qual \
