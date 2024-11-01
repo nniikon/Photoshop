@@ -427,9 +427,9 @@ void RectangleShape::draw(IRenderWindow *window) const {
 }
 
 void RectangleShape::setTexture(const ITexture *texture) {
-    const auto sfTexture = dynamic_cast<const sf::Texture*>(texture);
-    if (sfTexture) {
-        shape_.setTexture(sfTexture);
+    const auto sfm_texture = dynamic_cast<const sfm::Texture*>(texture);
+    if (sfm_texture) {
+        shape_.setTexture(&sfm_texture->texture_);
         image_needs_update_ = true;
     }
 }
@@ -578,9 +578,9 @@ void EllipseShape::draw(IRenderWindow *window) const {
 }
 
 void EllipseShape::setTexture(const ITexture *texture) {
-    const auto sfTexture = dynamic_cast<const sf::Texture*>(texture);
-    if (sfTexture) {
-        shape_.setTexture(sfTexture);
+    const auto sfm_texture = dynamic_cast<const sfm::Texture*>(texture);
+    if (sfm_texture) {
+        shape_.setTexture(&sfm_texture->texture_);
         image_needs_update_ = true;
     }
 }

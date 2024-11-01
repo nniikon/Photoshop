@@ -109,6 +109,8 @@ public:
 private:
     sf::Texture texture_;
 
+    friend class RectangleShape;
+    friend class EllipseShape;
     friend class Sprite;
 };
 
