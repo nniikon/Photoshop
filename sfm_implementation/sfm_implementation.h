@@ -196,9 +196,9 @@ public:
     void move(const vec2f &offset) override;
 
 private:
-    sf::RectangleShape shape;
-    mutable std::unique_ptr<IImage> cachedImage;
-    mutable bool imageNeedsUpdate = true;
+    sf::RectangleShape shape_;
+    mutable std::unique_ptr<IImage> cached_image_;
+    mutable bool image_needs_update_ = true;
 
     void updateImage() const;
 };
@@ -234,9 +234,9 @@ public:
     void move(const vec2f &offset) override;
 
 private:
-    sf::CircleShape shape;
-    mutable std::unique_ptr<IImage> cachedImage;
-    mutable bool imageNeedsUpdate = true;
+    sf::CircleShape shape_;
+    mutable std::unique_ptr<IImage> cached_image_;
+    mutable bool image_needs_update_ = true;
 
     void updateImage() const;
 };

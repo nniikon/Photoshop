@@ -1,5 +1,9 @@
 #include "sfm_implementation.h"
 #include <SFML/Graphics.hpp>
+
+#define LOGURU_WITH_STREAMS 1
+#include "loguru.hpp"
+
 #include <cassert>
 #include <memory>
 
@@ -157,23 +161,6 @@ std::unique_ptr<IRenderWindow> RenderWindow::create(unsigned int width, unsigned
     return std::make_unique<RenderWindow>(width, height, title);
 }
 
-// FUCK YOU VANYA (IImage) FUCK YOU FUCK YOU
-
-void IImage::create(unsigned int width, unsigned int height, const Color &color) { assert(0); }
-void IImage::create(vec2u size,                              const Color &color) { assert(0); }
-
-void IImage::create(unsigned int width, unsigned int height, const Color *pixels) { assert(0); }
-void IImage::create(vec2u size,                              const Color *pixels) { assert(0); }
-
-bool IImage::loadFromFile(const std::string &filename) { assert(0); return false; }
-
-vec2u IImage::getSize() const { return vec2u(); }
-void IImage::setPixel(unsigned int x, unsigned int y, const Color &color) { assert(0); }
-void IImage::setPixel(vec2u pos, const Color &color) { assert(0); }
-
-Color IImage::getPixel(unsigned int x, unsigned int y) const { assert(0); return Color(); }
-Color IImage::getPixel(vec2u pos) const { assert(0); return Color(); }
-
 // FUCK YOU VANYA (PixelsArray)
 
 void PixelsArray::setColor(const Color &color, size_t ind) {}
@@ -239,7 +226,7 @@ Color Image::getPixel(vec2u pos) const {
     return getPixel(pos.x, pos.y);
 }
 
-std::unique_ptr<IImage> Image::create() {
+std::unique_ptr<IImage> IImage::create() {
     return std::make_unique<Image>();
 }
 
@@ -298,7 +285,7 @@ void Texture::update(const Color *pixels, unsigned int width, unsigned int heigh
     texture_.update(reinterpret_cast<const sf::Uint8*>(pixels), width, height, x, y);
 }
 
-std::unique_ptr<ITexture> Texture::create() {
+std::unique_ptr<ITexture> ITexture::create() {
     return std::make_unique<Texture>();
 }
 
@@ -427,135 +414,154 @@ vec2i Mouse::getPosition(const IRenderWindow* window) {
 // Rectangle implementation
 
 RectangleShape::RectangleShape(unsigned int width, unsigned int height)
-    : shape(sf::Vector2f(static_cast<float>(width),
+    : shape_(sf::Vector2f(static_cast<float>(width),
                          static_cast<float>(height))) {}
 
 RectangleShape::RectangleShape(const vec2u &size)
-    : shape(sf::Vector2f(static_cast<float>(size.x), 
+    : shape_(sf::Vector2f(static_cast<float>(size.x), 
                          static_cast<float>(size.y))) {}
 
 void RectangleShape::draw(IRenderWindow *window) const {
     auto sfmWindow = static_cast<RenderWindow*>(window);
-    sfmWindow->window_.draw(shape);
+    sfmWindow->window_.draw(shape_);
 }
 
 void RectangleShape::setTexture(const ITexture *texture) {
     const auto sfTexture = dynamic_cast<const sf::Texture*>(texture);
     if (sfTexture) {
-        shape.setTexture(sfTexture);
-        imageNeedsUpdate = true;
+        shape_.setTexture(sfTexture);
+        image_needs_update_ = true;
     }
 }
 
 void RectangleShape::setFillColor(const Color &color) {
-    shape.setFillColor(sf::Color(color.r, color.g, color.b, color.a));
-    imageNeedsUpdate = true;
+    shape_.setFillColor(sf::Color(color.r, color.g, color.b, color.a));
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setPosition(const vec2i &pos) {
-    shape.setPosition(sf::Vector2f(static_cast<float>(pos.x),
+    shape_.setPosition(sf::Vector2f(static_cast<float>(pos.x),
                                    static_cast<float>(pos.y)));
-    imageNeedsUpdate = true;
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setPosition(const vec2f &pos) {
-    shape.setPosition(sf::Vector2f(pos.x, pos.y));
-    imageNeedsUpdate = true;
+    shape_.setPosition(sf::Vector2f(pos.x, pos.y));
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setPosition(const vec2d &pos) {
-    shape.setPosition(sf::Vector2f(static_cast<float>(pos.x), static_cast<float>(pos.y)));
-    imageNeedsUpdate = true;
+    shape_.setPosition(sf::Vector2f(static_cast<float>(pos.x), static_cast<float>(pos.y)));
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setScale(const vec2f &scale) {
-    shape.setScale(sf::Vector2f(scale.x, scale.y));
-    imageNeedsUpdate = true;
+    shape_.setScale(sf::Vector2f(scale.x, scale.y));
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setSize(const vec2u &size) {
-    shape.setSize(sf::Vector2f(static_cast<float>(size.x),
+    shape_.setSize(sf::Vector2f(static_cast<float>(size.x),
                                static_cast<float>(size.y)));
-    imageNeedsUpdate = true;
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setRotation(float angle) {
-    shape.setRotation(angle);
-    imageNeedsUpdate = true;
+    shape_.setRotation(angle);
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setOutlineColor(const Color &color) {
-    shape.setOutlineColor(sf::Color(color.r, color.g, color.b, color.a));
-    imageNeedsUpdate = true;
+    shape_.setOutlineColor(sf::Color(color.r, color.g, color.b, color.a));
+    image_needs_update_ = true;
 }
 
 void RectangleShape::setOutlineThickness(float thickness) {
-    shape.setOutlineThickness(thickness);
-    imageNeedsUpdate = true;
+    shape_.setOutlineThickness(thickness);
+    image_needs_update_ = true;
 }
 
 float RectangleShape::getRotation() const {
-    return shape.getRotation();
+    return shape_.getRotation();
 }
 
 vec2f RectangleShape::getScale() const {
-    auto scale = shape.getScale();
+    auto scale = shape_.getScale();
     return {scale.x, scale.y};
 }
 
 vec2f RectangleShape::getPosition() const {
-    auto pos = shape.getPosition();
+    auto pos = shape_.getPosition();
     return {pos.x, pos.y};
 }
 
 const Color &RectangleShape::getFillColor() const {
-    return reinterpret_cast<const Color&>(shape.getFillColor());
+    return reinterpret_cast<const Color&>(shape_.getFillColor());
 }
 
 vec2u RectangleShape::getSize() const {
-    auto size = shape.getSize();
+    auto size = shape_.getSize();
     return {static_cast<unsigned int>(size.x), static_cast<unsigned int>(size.y)};
 }
 
 float RectangleShape::getOutlineThickness() const {
-    return shape.getOutlineThickness();
+    return shape_.getOutlineThickness();
 }
 
 const Color &RectangleShape::getOutlineColor() const {
-    return reinterpret_cast<const Color&>(shape.getOutlineColor());
+    return reinterpret_cast<const Color&>(shape_.getOutlineColor());
 }
 
 const IImage *RectangleShape::getImage() const {
-    if (imageNeedsUpdate) {
+    if (image_needs_update_) {
         updateImage();
     }
-    return cachedImage.get();
+    return cached_image_.get();
 }
 
 void RectangleShape::move(const vec2f &offset) {
-    shape.move(sf::Vector2f(offset.x, offset.y));
-    imageNeedsUpdate = true;
+    shape_.move(sf::Vector2f(offset.x, offset.y));
+    image_needs_update_ = true;
 }
 
 void RectangleShape::updateImage() const {
     sf::RenderTexture renderTexture;
-    renderTexture.create(getSize().x, getSize().y);
+    if (!renderTexture.create(1920, 1080)){
+        LOG_F(ERROR, "Failed to create render texture");
+        return;
+    }
+
     renderTexture.clear(sf::Color::Transparent);
-    renderTexture.draw(shape);
+    renderTexture.draw(shape_);
     renderTexture.display();
 
     sf::Image image = renderTexture.getTexture().copyToImage();
-    cachedImage = std::make_unique<Image>();
-    cachedImage->create(image.getSize().x,
-                        image.getSize().y,
-                        reinterpret_cast<const Color*>(image.getPixelsPtr()));
-    imageNeedsUpdate = false;
+    if (image.getSize().x == 0 || image.getSize().y == 0) {
+        LOG_F(ERROR, "Image size is zero after copying from RenderTexture");
+        return;
+    }
+
+    cached_image_ = std::make_unique<Image>();
+    cached_image_->create(image.getSize().x,
+                          image.getSize().y,
+                          reinterpret_cast<const Color*>(image.getPixelsPtr()));
+
+    image_needs_update_ = false;
+}
+
+std::unique_ptr<IRectangleShape> IRectangleShape::create(unsigned int width,
+                                                         unsigned int height) {
+    return std::make_unique<RectangleShape>(width, height); 
+}
+
+std::unique_ptr<IRectangleShape> IRectangleShape::create(const vec2u &size) {
+    return std::make_unique<RectangleShape>(size);
 }
 
 // Ellipse implementation
 
 EllipseShape::EllipseShape(unsigned int width, unsigned int height)
-    : shape(static_cast<float>(width) / 2.0f) {
+    : shape_(static_cast<float>(width) / 2.0f) {
     setSize({width, height});
 }
 
@@ -563,127 +569,149 @@ EllipseShape::EllipseShape(const vec2u &size)
     : EllipseShape(size.x, size.y) {}
 
 EllipseShape::EllipseShape(unsigned int radius)
-    : shape(static_cast<float>(radius)) {}
+    : shape_(static_cast<float>(radius)),
+      image_needs_update_(true) {}
 
 void EllipseShape::draw(IRenderWindow *window) const {
     auto sfmWindow = static_cast<RenderWindow*>(window);
-    sfmWindow->window_.draw(shape);
+    sfmWindow->window_.draw(shape_);
 }
 
 void EllipseShape::setTexture(const ITexture *texture) {
     const auto sfTexture = dynamic_cast<const sf::Texture*>(texture);
     if (sfTexture) {
-        shape.setTexture(sfTexture);
-        imageNeedsUpdate = true;
+        shape_.setTexture(sfTexture);
+        image_needs_update_ = true;
     }
 }
 
 void EllipseShape::setFillColor(const Color &color) {
-    shape.setFillColor(sf::Color(color.r, color.g, color.b, color.a));
-    imageNeedsUpdate = true;
+    shape_.setFillColor(sf::Color(color.r, color.g, color.b, color.a));
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setPosition(const vec2i &pos) {
-    shape.setPosition(sf::Vector2f(static_cast<float>(pos.x),
+    shape_.setPosition(sf::Vector2f(static_cast<float>(pos.x),
                                    static_cast<float>(pos.y)));
-    imageNeedsUpdate = true;
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setPosition(const vec2f &pos) {
-    shape.setPosition(sf::Vector2f(pos.x, pos.y));
-    imageNeedsUpdate = true;
+    shape_.setPosition(sf::Vector2f(pos.x, pos.y));
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setPosition(const vec2d &pos) {
-    shape.setPosition(sf::Vector2f(static_cast<float>(pos.x), static_cast<float>(pos.y)));
-    imageNeedsUpdate = true;
+    shape_.setPosition(sf::Vector2f(static_cast<float>(pos.x), static_cast<float>(pos.y)));
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setScale(const vec2f &scale) {
-    shape.setScale(sf::Vector2f(scale.x, scale.y));
-    imageNeedsUpdate = true;
+    shape_.setScale(sf::Vector2f(scale.x, scale.y));
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setSize(const vec2u &size) {
     // Set the radius to half the width, and adjust scale to simulate an ellipse
-    shape.setRadius(static_cast<float>(size.x) / 2.0f);
-    shape.setScale(1.0f, static_cast<float>(size.y) / static_cast<float>(size.x));
-    imageNeedsUpdate = true;
+    shape_.setRadius(static_cast<float>(size.x) / 2.0f);
+    shape_.setScale(1.0f, static_cast<float>(size.y) / static_cast<float>(size.x));
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setRotation(float angle) {
-    shape.setRotation(angle);
-    imageNeedsUpdate = true;
+    shape_.setRotation(angle);
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setOutlineColor(const Color &color) {
-    shape.setOutlineColor(sf::Color(color.r, color.g, color.b, color.a));
-    imageNeedsUpdate = true;
+    shape_.setOutlineColor(sf::Color(color.r, color.g, color.b, color.a));
+    image_needs_update_ = true;
 }
 
 void EllipseShape::setOutlineThickness(float thickness) {
-    shape.setOutlineThickness(thickness);
-    imageNeedsUpdate = true;
+    shape_.setOutlineThickness(thickness);
+    image_needs_update_ = true;
 }
 
 float EllipseShape::getRotation() const {
-    return shape.getRotation();
+    return shape_.getRotation();
 }
 
 vec2f EllipseShape::getScale() const {
-    auto scale = shape.getScale();
+    auto scale = shape_.getScale();
     return {scale.x, scale.y};
 }
 
 vec2f EllipseShape::getPosition() const {
-    auto pos = shape.getPosition();
+    auto pos = shape_.getPosition();
     return {pos.x, pos.y};
 }
 
 const Color &EllipseShape::getFillColor() const {
-    return reinterpret_cast<const Color&>(shape.getFillColor());
+    return reinterpret_cast<const Color&>(shape_.getFillColor());
 }
 
 vec2u EllipseShape::getSize() const {
-    auto radius = shape.getRadius();
-    return {static_cast<unsigned int>(radius * 2.0f * shape.getScale().x),
-            static_cast<unsigned int>(radius * 2.0f * shape.getScale().y)};
+    auto radius = shape_.getRadius();
+    return {static_cast<unsigned int>(radius * 2.0f * shape_.getScale().x),
+            static_cast<unsigned int>(radius * 2.0f * shape_.getScale().y)};
 }
 
 float EllipseShape::getOutlineThickness() const {
-    return shape.getOutlineThickness();
+    return shape_.getOutlineThickness();
 }
 
 const Color &EllipseShape::getOutlineColor() const {
-    return reinterpret_cast<const Color&>(shape.getOutlineColor());
+    return reinterpret_cast<const Color&>(shape_.getOutlineColor());
 }
 
 const IImage *EllipseShape::getImage() const {
-    if (imageNeedsUpdate) {
+    if (image_needs_update_) {
         updateImage();
     }
-    return cachedImage.get();
+    return cached_image_.get();
 }
 
 void EllipseShape::move(const vec2f &offset) {
-    shape.move(sf::Vector2f(offset.x, offset.y));
-    imageNeedsUpdate = true;
+    shape_.move(sf::Vector2f(offset.x, offset.y));
+    image_needs_update_ = true;
 }
 
 void EllipseShape::updateImage() const {
     sf::RenderTexture renderTexture;
-    auto size = getSize();
-    renderTexture.create(size.x, size.y);
+    if (!renderTexture.create(1920, 1080)){
+        LOG_F(ERROR, "Failed to create render texture");
+        return;
+    }
+
     renderTexture.clear(sf::Color::Transparent);
-    renderTexture.draw(shape);
+    renderTexture.draw(shape_);
     renderTexture.display();
 
     sf::Image image = renderTexture.getTexture().copyToImage();
-    cachedImage = std::make_unique<Image>();
-    cachedImage->create(image.getSize().x,
-                        image.getSize().y,
-                        reinterpret_cast<const Color*>(image.getPixelsPtr()));
-    imageNeedsUpdate = false;
+    if (image.getSize().x == 0 || image.getSize().y == 0) {
+        LOG_F(ERROR, "Image size is zero after copying from RenderTexture");
+        return;
+    }
+
+    cached_image_ = std::make_unique<Image>();
+    cached_image_->create(image.getSize().x,
+                          image.getSize().y,
+                          reinterpret_cast<const Color*>(image.getPixelsPtr()));
+
+    image_needs_update_ = false;
+}
+
+std::unique_ptr<IEllipseShape> IEllipseShape::create(unsigned int width, unsigned int height) {
+    return std::make_unique<EllipseShape>(width, height);    
+}
+
+std::unique_ptr<IEllipseShape> IEllipseShape::create(unsigned int radius) {
+    return std::make_unique<EllipseShape>(radius);
+}
+
+std::unique_ptr<IEllipseShape> IEllipseShape::create(const psapi::sfm::vec2u &size) {
+    return std::make_unique<EllipseShape>(size);
 }
 
 } // namespace sfm
