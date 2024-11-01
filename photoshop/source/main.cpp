@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
             getRootWindow()->update(&window, event);
         }
 
-        getRootWindow()->update(&window, {.type = sfm::Event::None});
+        sfm::Event idle_event = {.type = sfm::Event::None};
+        getRootWindow()->update(&window, idle_event);
         getRootWindow()->draw(&window);
 
         window.display();
