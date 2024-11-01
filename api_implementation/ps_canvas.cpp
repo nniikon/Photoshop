@@ -69,10 +69,10 @@ Canvas::Canvas(vec2i size, vec2i pos)
       texture_(),
       sprite_(),
       is_active_(true) {
-    texture_ = psapi::sfm::Texture::create();
+    texture_ = psapi::sfm::ITexture::create();
     texture_->create(static_cast<unsigned int>(size_.x),
                      static_cast<unsigned int>(size_.y));
-    sprite_  = psapi::sfm::Sprite::create();
+    sprite_  = psapi::sfm::ISprite::create();
 
     layers_.push_back(std::make_unique<Layer>(size_));
 
