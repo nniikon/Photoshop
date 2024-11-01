@@ -98,9 +98,6 @@ void EllipseAction::updateTempLayer(psapi::ILayer* layer, const psapi::sfm::vec2
         std::min(mouse_starting_point_.y, current_pos.y)
     });
 
-    LOG_F(INFO, "Ellipse size: %d, %d", size.x, size.y);
-    LOG_F(INFO, "Ellipse position: %d, %d", ellipse_->getPosition().x, ellipse_->getPosition().y);
-
     clearLayer(layer);
     transferFinalEllipseToLayer(layer);
 }

@@ -70,7 +70,7 @@ void LineAction::handleMousePressed(const psapi::sfm::Event& event, const psapi:
 
 void LineAction::initializeRectangle() {
     rect_->setPosition(mouse_starting_point_);
-    rect_->setFillColor(psapi::sfm::Color{255, 0, 0, 255});
+    rect_->setFillColor(psapi::sfm::Color{255, 255, 0, 255});
 }
 
 void LineAction::handleMouseReleased(psapi::ILayer* active_layer) {
@@ -80,8 +80,8 @@ void LineAction::handleMouseReleased(psapi::ILayer* active_layer) {
 
     is_mouse_down_ = false;
     transferFinalLineToLayer(active_layer);
-
     clearLayer(canvas_->getTempLayer());
+
     rect_->setSize(psapi::sfm::vec2u{1, 1});
     rect_->setPosition(psapi::sfm::vec2i{0, 0});
 }
