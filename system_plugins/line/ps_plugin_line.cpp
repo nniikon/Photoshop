@@ -1,13 +1,9 @@
 #include "ps_plugin_line.h"
-#include "ps_plugin_brush.h"
 
+#include "ps_parse_sprite.h"
+
+#include <string>
 #include <immintrin.h>
-
-#define LOGURU_WITH_STREAMS 1
-#include "loguru.hpp"
-
-#undef LOG_F
-#define LOG_F(...) (void)0
 
 static psapi::sfm::ITexture* texture = nullptr;
 
@@ -41,7 +37,6 @@ bool LineAction::operator()(const psapi::IRenderWindow* renderWindow,
         handleMouseReleased(active_layer);
     }
     else if (event.type == psapi::sfm::Event::MouseMoved && is_mouse_down_) {
-        LOG_F(INFO, "Mouse moved to %d, %d", mouse_pos.x, mouse_pos.y);
         if (is_new_frame_) {
             updateTempLayer(temp_layer, mouse_pos);
 
@@ -124,8 +119,6 @@ void LineAction::setupRectangle(float length, float angle) {
     if (length < 0.1f)
         return;
 
-    LOG_F(INFO, "Setting up rectangle with length %f and angle %f\n", length, angle);
-
     rect_->setSize({static_cast<unsigned int>(length), 5});  // Width = length,
                                                              // height = thickness
     rect_->setRotation(angle);
@@ -152,20 +145,14 @@ void LineAction::transferFinalLineToLayer(psapi::ILayer* active_layer) {
     }
 }
 
-constexpr psapi::sfm::IntRect kLineButtonTextureArea = {0, 64, 64, 64};
-
 bool loadPlugin() {
-    texture = psapi::sfm::ITexture::create().release();
-    texture->loadFromFile("./assets/buttons.png");
-
-    auto toolbar_sprite = psapi::sfm::ISprite::create();
-    toolbar_sprite->setTexture(texture);
-    toolbar_sprite->setTextureRect(kLineButtonTextureArea);
+    ps::SpriteInfo sprite_info = ps::ParseSpriteFromConfig("system_plugins/line/ps_plugin_line_config.pscfg");
+    texture = sprite_info.texture.release();
 
     auto toolbar = dynamic_cast<psapi::IBar*>(psapi::getRootWindow()->getWindowById(psapi::kToolBarWindowId));
 
     auto line_action = std::make_unique<LineAction>();
-    auto line_button = std::make_unique<ps::ABarButton>(std::move(toolbar_sprite),
+    auto line_button = std::make_unique<ps::ABarButton>(std::move(sprite_info.sprite),
                                                         toolbar,
                                                         std::move(line_action));
     toolbar->addWindow(std::move(line_button));

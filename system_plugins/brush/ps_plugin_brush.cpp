@@ -5,7 +5,7 @@
 
 constexpr psapi::sfm::IntRect kBrushButtonTextureArea = {0, 0, 64, 64};
 
-constexpr int kBrushRadius = 10;
+constexpr int kBrushRadius = 1;
 static psapi::sfm::ITexture* texture = nullptr;
 
 BrushAction::BrushAction() {

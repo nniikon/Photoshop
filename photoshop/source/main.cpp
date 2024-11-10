@@ -10,14 +10,12 @@
 using namespace psapi;
 
 const std::string kPluginPaths[] = {
-    "./system_plugins/libplugin_toolbar.so",
-    "./system_plugins/libplugin_canvas.so",
-    "./system_plugins/libplugin_brush.so",
-    "./system_plugins/libplugin_line.so",
-    "./system_plugins/libplugin_rectangle.so",
-    "./system_plugins/libplugin_circle.so",
-    "./system_plugins/libplugin_shape.so",
-    "./system_plugins/libplugin_eraser.so",
+    "./system_plugins/toolbar/libplugin_toolbar.so",
+    "./system_plugins/canvas/libplugin_canvas.so",
+    "./system_plugins/brush/libplugin_brush.so",
+    "./system_plugins/line/libplugin_line.so",
+    "./system_plugins/shape/libplugin_shape.so",
+    "./system_plugins/eraser/libplugin_eraser.so",
 };
 
 int loadPlugins();

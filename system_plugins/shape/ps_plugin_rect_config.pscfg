@@ -1,0 +1,6 @@
+SCREEN_POS: {0, 0}
+IMAGE_POS:  {0, 128}
+IMAGE_SIZE: {64, 64}
+IMAGE_PATH: ./assets/buttons.png
+NAME:        NotUsed 
+DESCRIPTION: Not Used

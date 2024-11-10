@@ -19,7 +19,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
     -Wformat-nonliteral \
     -Wformat-security \
     -Wformat=2 \
-    -Winline \
     -Wpacked \
     -Wpointer-arith \
     -Winit-self \

@@ -1,8 +1,7 @@
 #include "ps_plugin_eraser.h"
 #include "loguru.hpp"
-#include "sfm_implementation.h"
 
-constexpr psapi::sfm::IntRect kClearButtonTextureArea = {64, 0, 64, 64};
+#include "ps_parse_sprite.h"
 
 static psapi::sfm::ITexture* texture = nullptr;
 
@@ -35,17 +34,15 @@ bool ClearAction::operator()(const psapi::IRenderWindow* renderWindow,
 }
 
 bool loadPlugin() {
-    texture = psapi::sfm::ITexture::create().release();
-    texture->loadFromFile("./assets/buttons.png");
-
-    auto toolbar_sprite = psapi::sfm::Sprite::create();
-    toolbar_sprite->setTexture(texture);
-    toolbar_sprite->setTextureRect(kClearButtonTextureArea);
+    ps::SpriteInfo sprite_info = ps::ParseSpriteFromConfig("system_plugins/eraser/ps_plugin_eraser_config.pscfg");
+    texture = sprite_info.texture.release();
 
     auto toolbar = dynamic_cast<psapi::IBar*>(psapi::getRootWindow()->getWindowById(psapi::kToolBarWindowId));
 
     auto clear_action = std::make_unique<ClearAction>();
-    auto clear_button = std::make_unique<ps::ABarButton>(std::move(toolbar_sprite), toolbar, std::move(clear_action));
+    auto clear_button = std::make_unique<ps::ABarButton>(std::move(sprite_info.sprite),
+                                                         toolbar,
+                                                         std::move(clear_action));
     toolbar->addWindow(std::move(clear_button));
 
     return true;
