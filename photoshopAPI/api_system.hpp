@@ -18,16 +18,15 @@ struct Vec2D
 {
     T x;
     T y;
-    Vec2D<T>(T init_x, T init_y)
+    Vec2D(T init_x, T init_y)
         :   x(init_x), y(init_y) {}
-    Vec2D<T>() = default;
+    Vec2D() = default;
 };
 
 using vec2i = Vec2D<int>;
 using vec2u = Vec2D<unsigned int>;
 using vec2f = Vec2D<float>;
 using vec2d = Vec2D<double>;
-
 
 template<typename T>
 Vec2D<T> &operator+=(Vec2D<T> &lhs, const Vec2D<T> &rhs)
