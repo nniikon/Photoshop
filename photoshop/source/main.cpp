@@ -16,6 +16,8 @@ const std::string kPluginPaths[] = {
     "./system_plugins/line/libplugin_line.so",
     "./system_plugins/shape/libplugin_shape.so",
     "./system_plugins/eraser/libplugin_eraser.so",
+    "./system_plugins/secondary_panel/libplugin_secondary_panel.so",
+    "./system_plugins/filters/libplugin_filters.so",
 };
 
 int loadPlugins();
