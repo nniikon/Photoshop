@@ -1,6 +1,7 @@
 #include "ps_plugin_shape.h"
 
 #include "ps_parse_sprite.h"
+#include "ps_plugin_secondary_panel.h"
 
 #include <cmath>
 
@@ -62,7 +63,9 @@ void ShapeAction<T>::handleMousePressed(const psapi::sfm::Event& event, const ps
     mouse_starting_point_ = mouse_pos;
 
     ellipse_->setPosition(mouse_starting_point_);
-    ellipse_->setFillColor(psapi::sfm::Color{0, 0, 255, 255});  // Set the ellipse color
+
+    auto secondary_panel = dynamic_cast<const ps::SecondaryPanel*>(psapi::getRootWindow()->getWindowById(ps::kSecondaryPanelWindowId));
+    ellipse_->setFillColor(secondary_panel->getColor());
 }
 
 template <typename T>
