@@ -1,0 +1,6 @@
+project(plugin_secondary_panel VERSION 0.1)
+
+add_library(plugin_secondary_panel SHARED ps_plugin_secondary_panel.cpp)
+
+target_link_libraries(plugin_secondary_panel PRIVATE logger api api_implementation sfm_implementation parse_sprite)
+target_include_directories(plugin_secondary_panel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
