@@ -4,7 +4,9 @@
 #include "api_canvas.hpp"
 #include <cassert>
 
-static psapi::sfm::ITexture* texture = nullptr;
+static psapi::sfm::ITexture* neg_filter_texture = nullptr;
+static psapi::sfm::ITexture* emboss_filter_texture = nullptr;
+static psapi::sfm::ITexture* blur_filter_texture = nullptr;
 
 FilterNegAction::FilterNegAction() {
     canvas_ = static_cast<psapi::ICanvas*>(
@@ -184,7 +186,7 @@ bool BlurAction::activate() {
 
 bool loadPlugin() {
     ps::SpriteInfo sprite_info = ps::ParseSpriteFromConfig("system_plugins/filters/ps_plugin_filter_negative_config.pscfg");
-    texture = sprite_info.texture.release();
+    neg_filter_texture = sprite_info.texture.release();
 
     auto toolbar = dynamic_cast<psapi::IBar*>(psapi::getRootWindow()->getWindowById(psapi::kToolBarWindowId));
 
@@ -196,6 +198,7 @@ bool loadPlugin() {
     toolbar->addWindow(std::move(neg_button));
 
     sprite_info = ps::ParseSpriteFromConfig("system_plugins/filters/ps_plugin_filter_negative_config.pscfg");
+    emboss_filter_texture = sprite_info.texture.release();
 
     auto emboss_action = std::make_unique<EmbossAction>();
     auto emboss_button = std::make_unique<ps::ABarButton>(std::move(sprite_info.sprite),
@@ -204,6 +207,7 @@ bool loadPlugin() {
     toolbar->addWindow(std::move(emboss_button));
 
     sprite_info = ps::ParseSpriteFromConfig("system_plugins/filters/ps_plugin_filter_negative_config.pscfg");
+    blur_filter_texture = sprite_info.texture.release();
 
     auto blur_action = std::make_unique<BlurAction>();
     auto blur_button = std::make_unique<ps::ABarButton>(std::move(sprite_info.sprite),
@@ -215,5 +219,7 @@ bool loadPlugin() {
 }
 
 void unloadPlugin() {
-    delete texture;
+    delete neg_filter_texture;
+    delete emboss_filter_texture;
+    delete blur_filter_texture;
 }

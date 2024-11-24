@@ -1,6 +1,6 @@
 SCREEN_POS: {0, 0}
-IMAGE_POS:  {0, 64}
+IMAGE_POS:  {65, 130}
 IMAGE_SIZE: {64, 64}
-IMAGE_PATH: ./assets/color_palette.png
+IMAGE_PATH: ./assets/buttons.png
 NAME:        NotUsed 
 DESCRIPTION: Not Used
