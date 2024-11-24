@@ -63,7 +63,8 @@ Canvas::Canvas(vec2i size, vec2i pos)
       layers_(0),
       pos_(pos),
       size_(size),
-      scale_{1, 1},
+      scale_{3.000f, 3.000f},
+      offset_{0, 0},
       last_mouse_pos_({0, 0}),
       is_pressed_(false),
       texture_(),
@@ -88,10 +89,28 @@ Canvas::Canvas(vec2i size, vec2i pos)
     }
 }
 
+vec2f Canvas::getScale() const {
+    return scale_;
+}
+
+vec2f Canvas::getOffset() const {
+    return offset_;
+}
+
+vec2f Canvas::getMaxOffset() const {
+    return {1 - 1 / scale_.x,
+            1 - 1 / scale_.y};
+}
+
 void Canvas::DrawLayer(const Layer& layer, psapi::IRenderWindow* renderWindow) {
+
     texture_->update(layer.pixels_.data());
     sprite_->setTexture(texture_.get());
     sprite_->setScale(scale_.x, scale_.y);
+    sprite_->setTextureRect({static_cast<int>((float)layer.size_.x * offset_.x),
+                             static_cast<int>((float)layer.size_.y * offset_.y),
+                             static_cast<int>((float)layer.size_.x / scale_.x),
+                             static_cast<int>((float)layer.size_.y / scale_.y)});
     sprite_->setPosition(static_cast<float>(pos_.x),
                          static_cast<float>(pos_.y));
 
@@ -116,8 +135,8 @@ bool Canvas::setLastMousePos(const psapi::IRenderWindow* renderWindow) {
     bool is_in_window = pos_.x <= mouse_pos.x && mouse_pos.x < pos_.x + size_.x &&
                         pos_.y <= mouse_pos.y && mouse_pos.y < pos_.y + size_.y;
 
-    last_mouse_pos_ = {mouse_pos.x - pos_.x, 
-                       mouse_pos.y - pos_.y};
+    last_mouse_pos_ = {static_cast<int>((float)(mouse_pos.x - pos_.x) / scale_.x + offset_.x * (float)size_.x),
+                       static_cast<int>((float)(mouse_pos.y - pos_.y) / scale_.y + offset_.y * (float)size_.y)};
 
     return is_in_window;
 }
@@ -267,6 +286,25 @@ void Canvas::setSize(vec2i size) {
 
 void Canvas::setScale(vec2f scale) {
     scale_ = scale;
+}
+
+void Canvas::setOffset(vec2f offset) {
+    psapi::vec2f max_offset = getMaxOffset();
+    offset_ = offset;
+
+    LOG_F(INFO, "Offset: %f %f", offset_.x, offset_.y);
+
+    if (offset_.x < 0.0f) {
+        offset_.x = 0.0f;
+    } else if (offset_.x > max_offset.x) {
+        offset_.x = max_offset.x;
+    }
+
+    if (offset_.y < 0.0f) {
+        offset_.y = 0.0f;
+    } else if (offset_.y > max_offset.y) {
+        offset_.y = max_offset.y;
+    }
 }
 
 size_t Canvas::getActiveLayerIndex() const {

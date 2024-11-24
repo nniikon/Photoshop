@@ -14,6 +14,19 @@ using psapi::sfm::vec2f;
 using psapi::sfm::ITexture;
 using psapi::sfm::ISprite;
 
+class Scrollable {
+public:
+    virtual ~Scrollable() = default;
+
+    virtual psapi::vec2f getOffset() const = 0;
+
+    virtual void setOffset(psapi::vec2f offset) = 0;
+
+    virtual psapi::vec2f getMaxOffset() const = 0;
+
+    virtual psapi::vec2i getPos() const = 0;
+};
+
 class Layer : public psapi::ILayer {
 public:
     Layer(vec2i size);
@@ -35,7 +48,7 @@ private:
     std::vector<Color> pixels_;
 };
 
-class Canvas : public psapi::ICanvas {
+class Canvas : public psapi::ICanvas, public ps::Scrollable {
 public:
     Canvas(vec2i size, vec2i pos);
     virtual ~Canvas() = default;
@@ -72,7 +85,13 @@ public:
 
     virtual void setPos  (vec2i pos)   override;
     virtual void setSize (vec2i size)  override;
+
+    vec2f getScale() const;
     virtual void setScale(vec2f scale) override;
+
+    void setOffset(vec2f offset) override;
+    vec2f getOffset() const      override;
+    vec2f getMaxOffset() const   override;
 
     virtual vec2i getMousePosition() const override;
     virtual bool  isPressed()        const override;
@@ -88,11 +107,12 @@ private:
     void DrawLayer(const Layer& layer, psapi::IRenderWindow* renderWindow);
     bool setLastMousePos(const psapi::IRenderWindow* renderWindow);
 
-    vec2i pos_;
-    vec2i size_;
-    vec2f scale_;
+    vec2i pos_      = {0, 0};
+    vec2i size_     = {0, 0};
+    vec2f scale_    = {1.0f, 1.0f};
+    vec2f offset_   = {0.0f, 0.0f};
 
-    vec2i last_mouse_pos_;
+    vec2i last_mouse_pos_ = {0, 0};
     bool is_pressed_ = false;
 
     std::unique_ptr<ITexture> texture_;
