@@ -67,7 +67,7 @@ static SpriteInfo ParseConfigFromContent(const std::string& file_content) {
     }
 
     std::unique_ptr<ITexture> texture = psapi::sfm::ITexture::create();
-    texture->loadFromFile("./assets/buttons.png");
+    texture->loadFromFile(image_path_buffer);
 
     std::unique_ptr<ISprite> sprite = psapi::sfm::ISprite::create();
     sprite->setTexture(texture.get());
