@@ -22,6 +22,7 @@ public:
 
 private:
     bool is_active_ = true;
+    psapi::vec2u size_ = {0, 0};
 };
 
 } // namespace

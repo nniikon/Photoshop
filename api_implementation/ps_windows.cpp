@@ -68,6 +68,8 @@ void RootWindow::draw(psapi::IRenderWindow* renderWindow) {
 
 bool RootWindow::update(const psapi::IRenderWindow* renderWindow,
                         const psapi::sfm::Event& event) {
+    size_ = renderWindow->getSize();
+
     bool result = false;
     for (auto& window : windows_) {
         result |= (window->update(renderWindow, event));
@@ -84,7 +86,7 @@ psapi::vec2i RootWindow::getPos() const {
 }
 
 psapi::vec2u RootWindow::getSize() const {
-    return {0, 0};
+    return size_;
 }
 
 void RootWindow::setParent(const IWindow* parent) {
