@@ -4,6 +4,10 @@ Makefile
 *.a
 *.o
 *.so
+*.kra
+*.*~
+*.data
+*.AppImage
 CMakeCache.txt
 cmake_install.cmake
 compile_commands.json
