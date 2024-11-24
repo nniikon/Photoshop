@@ -1,6 +1,9 @@
 #include "ps_plugin_brush.h"
+
 #include "loguru.hpp"
 #include "sfm_implementation.h"
+#include "ps_plugin_secondary_panel.h"
+
 #include <cmath>
 
 constexpr psapi::sfm::IntRect kBrushButtonTextureArea = {0, 0, 64, 64};
@@ -24,7 +27,7 @@ void BrushAction::paintAtPosition(const psapi::sfm::vec2i& position) {
 
                 if (pixel_pos.x >= 0 && pixel_pos.x < canvas_->getSize().x &&
                     pixel_pos.y >= 0 && pixel_pos.y < canvas_->getSize().y) {
-                    layer->setPixel(pixel_pos, psapi::sfm::Color{255, 0, 0, 255});
+                    layer->setPixel(pixel_pos, color_);
                 }
             }
         }
@@ -99,6 +102,9 @@ bool BrushAction::operator()(const psapi::IRenderWindow* renderWindow,
         mouse_points_.clear();
         return false;
     }
+
+    auto secondary_panel = dynamic_cast<const ps::SecondaryPanel*>(psapi::getRootWindow()->getWindowById(ps::kSecondaryPanelWindowId));
+    color_ = secondary_panel->getColor();
 
     psapi::sfm::vec2i current_pos = canvas_->getMousePosition();
 

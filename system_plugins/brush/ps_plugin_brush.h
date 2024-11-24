@@ -19,6 +19,7 @@ public:
 
 private:
     psapi::ICanvas* canvas_ = nullptr;
+    psapi::sfm::Color color_ = {0, 0, 0, 255};
 
     struct MousePoint {
         psapi::sfm::vec2f position;
