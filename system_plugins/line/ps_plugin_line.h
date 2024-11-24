@@ -37,7 +37,6 @@ private:
     psapi::sfm::vec2i last_mouse_pos_ = {0, 0};
 
     bool is_new_frame_ = true;
-
 };
 
 #endif // PHOTOSHOP_PLUGIN_LINE_H

@@ -1,6 +1,7 @@
 #include "ps_plugin_line.h"
 
 #include "ps_parse_sprite.h"
+#include "ps_plugin_secondary_panel.h"
 
 #include <string>
 #include <immintrin.h>
@@ -24,6 +25,9 @@ bool LineAction::operator()(const psapi::IRenderWindow* renderWindow,
     if (event.type == psapi::sfm::Event::None) {
         is_new_frame_ = true;
     }
+
+    auto secondary_panel = dynamic_cast<const ps::SecondaryPanel*>(psapi::getRootWindow()->getWindowById(ps::kSecondaryPanelWindowId));
+    rect_->setFillColor(secondary_panel->getColor());
 
     auto active_layer = canvas_->getLayer(canvas_->getActiveLayerIndex());
     auto   temp_layer = canvas_->getTempLayer();
@@ -65,7 +69,6 @@ void LineAction::handleMousePressed(const psapi::sfm::Event& event, const psapi:
 
 void LineAction::initializeRectangle() {
     rect_->setPosition(mouse_starting_point_);
-    rect_->setFillColor(psapi::sfm::Color{255, 255, 0, 255});
 }
 
 void LineAction::handleMouseReleased(psapi::ILayer* active_layer) {
