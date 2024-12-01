@@ -32,8 +32,8 @@ void ABarButton::draw(psapi::IRenderWindow* renderWindow) {
 
     sprite_->setPosition(static_cast<float>(pos_.x),
                          static_cast<float>(pos_.y));
-    float factor_x = static_cast<float>(size_.x) / static_cast<float>(sprite_->getGlobalBounds().width);
-    float factor_y = static_cast<float>(size_.y) / static_cast<float>(sprite_->getGlobalBounds().height);
+    float factor_x = static_cast<float>(size_.x) / static_cast<float>(sprite_->getGlobalBounds().size.x);
+    float factor_y = static_cast<float>(size_.y) / static_cast<float>(sprite_->getGlobalBounds().size.y);
     sprite_->setScale(factor_x, factor_y);
 
     renderWindow->draw(sprite_.get());

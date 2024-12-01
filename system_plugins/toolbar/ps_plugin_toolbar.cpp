@@ -12,10 +12,10 @@ using psapi::sfm::vec2f;
 
 static psapi::sfm::ITexture* texture = nullptr;
 
-constexpr psapi::sfm::IntRect kToolbarTextureArea       = {0,   0,   256, 1024};
-constexpr psapi::sfm::IntRect kHoverButtonTextureArea   = {256, 0,   64,  64};
-constexpr psapi::sfm::IntRect kPressedButtonTextureArea = {256, 64,  64,  64};
-constexpr psapi::sfm::IntRect kActiveButtonTextureArea  = {256, 128, 64,  64};
+const psapi::sfm::IntRect kToolbarTextureArea       = {{0, 0}, {256u, 1024u}};
+const psapi::sfm::IntRect kHoverButtonTextureArea   = {{256,   0}, {64,    64}};
+const psapi::sfm::IntRect kPressedButtonTextureArea = {{256,  64}, {64,    64}};
+const psapi::sfm::IntRect kActiveButtonTextureArea  = {{256, 128}, {64,    64}};
     
 bool loadPlugin() {
 

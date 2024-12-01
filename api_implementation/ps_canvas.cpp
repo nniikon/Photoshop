@@ -107,10 +107,10 @@ void Canvas::DrawLayer(const Layer& layer, psapi::IRenderWindow* renderWindow) {
     texture_->update(layer.pixels_.data());
     sprite_->setTexture(texture_.get());
     sprite_->setScale(scale_.x, scale_.y);
-    sprite_->setTextureRect({static_cast<int>((float)layer.size_.x * offset_.x),
-                             static_cast<int>((float)layer.size_.y * offset_.y),
-                             static_cast<int>((float)layer.size_.x / scale_.x),
-                             static_cast<int>((float)layer.size_.y / scale_.y)});
+    sprite_->setTextureRect({{static_cast<         int>((float)layer.size_.x * offset_.x),
+                              static_cast<         int>((float)layer.size_.y * offset_.y)},
+                             {static_cast<unsigned int>((float)layer.size_.x / scale_.x),
+                              static_cast<unsigned int>((float)layer.size_.y / scale_.y)}});
     sprite_->setPosition(static_cast<float>(pos_.x),
                          static_cast<float>(pos_.y));
 
