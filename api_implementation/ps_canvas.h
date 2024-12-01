@@ -14,19 +14,6 @@ using psapi::sfm::vec2f;
 using psapi::sfm::ITexture;
 using psapi::sfm::ISprite;
 
-class Scrollable {
-public:
-    virtual ~Scrollable() = default;
-
-    virtual psapi::vec2f getOffset() const = 0;
-
-    virtual void setOffset(psapi::vec2f offset) = 0;
-
-    virtual psapi::vec2f getMaxOffset() const = 0;
-
-    virtual psapi::vec2i getPos() const = 0;
-};
-
 class Layer : public psapi::ILayer {
 public:
     Layer(vec2i size);
@@ -46,6 +33,19 @@ private:
 
     vec2i size_;
     std::vector<Color> pixels_;
+};
+
+class Scrollable {
+public:
+    virtual ~Scrollable() = default;
+
+    virtual psapi::vec2f getOffset() const = 0;
+
+    virtual void setOffset(psapi::vec2f offset) = 0;
+
+    virtual psapi::vec2f getMaxOffset() const = 0;
+
+    virtual psapi::vec2i getPos() const = 0;
 };
 
 class Canvas : public psapi::ICanvas, public ps::Scrollable {
