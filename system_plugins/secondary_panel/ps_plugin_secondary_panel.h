@@ -1,5 +1,6 @@
 #include "api_photoshop.hpp"
 #include "api_sfm.hpp"
+#include <vector>
 
 extern "C" {
     bool   loadPlugin();
@@ -26,6 +27,8 @@ public:
     psapi::IWindow*       getWindowById(psapi::wid_t id)       override;
     psapi::vec2i getPos() const                                override;
     psapi::vec2u getSize() const                               override;
+    void setSize(const psapi::vec2u& size)                     override;
+    void setPos(const psapi::vec2i& pos)                       override;
     void setParent(const IWindow* parent)                      override;
     void forceActivate()                                       override;
     void forceDeactivate()                                     override;
@@ -46,8 +49,8 @@ public:
     ~ColorPalette() = default;
 
     void draw(psapi::IRenderWindow* render_window) override;
-    bool update(const psapi::IRenderWindow* render_window,
-                const psapi::Event& event) override;
+    virtual std::unique_ptr<psapi::IAction> createAction(const psapi::IRenderWindow* renderWindow,
+                                                         const psapi::Event& event) override;
 
     void  enable();
     void disable();
@@ -59,23 +62,30 @@ private:
     Color color_ = {0, 0, 0, 255};
 };
 
-class SecondaryPanel : public psapi::IWindowVector {
+class SecondaryPanel : public psapi::IWindowContainer {
 public:
     SecondaryPanel();
     ~SecondaryPanel() = default;
 
     void draw(psapi::IRenderWindow* renderWindow)              override;
-    bool update(const psapi::IRenderWindow* renderWindow, 
-                const psapi::Event& event)                     override;
+    virtual std::unique_ptr<psapi::IAction> createAction(const psapi::IRenderWindow* renderWindow,
+                                                         const psapi::Event& event) override;
     psapi::wid_t getId() const                                 override;
     const psapi::IWindow* getWindowById(psapi::wid_t id) const override;
     psapi::IWindow*       getWindowById(psapi::wid_t id)       override;
     psapi::vec2i getPos() const                                override;
     psapi::vec2u getSize() const                               override;
+
+    void setSize(const psapi::vec2u& size)                     override;
+    void setPos(const psapi::vec2i& pos)                       override;
+
     void setParent(const IWindow* parent)                      override;
     void forceActivate()                                       override;
     void forceDeactivate()                                     override;
     bool isActive() const                                      override;
+
+    void addWindow(std::unique_ptr<IWindow> window) override;
+    void removeWindow(psapi::wid_t id)              override;
 
     void  enable();
     void disable();
@@ -93,6 +103,9 @@ private:
     ColorPalette color_palette_;
 
     bool is_enabled_ = false;
+    const IWindow* parent_ = nullptr;
+
+    std::vector<std::unique_ptr<psapi::IWindow>> windows_;
 };
 
 } // namespace

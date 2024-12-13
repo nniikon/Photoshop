@@ -3,6 +3,7 @@
 
 #include "api_canvas.hpp"
 #include "api_sfm.hpp"
+#include <vector>
 
 namespace ps {
 
@@ -54,14 +55,15 @@ public:
     virtual ~Canvas() = default;
 
     virtual void draw(psapi::IRenderWindow* renderWindow)         override;
-    virtual bool update(const psapi::IRenderWindow* renderWindow,
-                        const psapi::sfm::Event& event)           override;
+    virtual std::unique_ptr<psapi::IAction> createAction(const psapi::IRenderWindow* renderWindow,
+                                                         const psapi::Event& event)          override;
 
     psapi::wid_t getId()                          const override;
     IWindow* getWindowById(psapi::wid_t id)             override;
     const IWindow* getWindowById(psapi::wid_t id) const override;
     vec2i getPos()                                const override;
     vec2u getSize()                               const override;
+
     void setParent(const IWindow* parent)               override;
     void forceActivate()                                override;
     void forceDeactivate()                              override;
@@ -83,8 +85,8 @@ public:
     virtual bool removeLayer     (size_t index) override;
     virtual bool insertEmptyLayer(size_t index) override;
 
-    virtual void setPos  (vec2i pos)   override;
-    virtual void setSize (vec2i size)  override;
+    virtual void setPos  (const vec2i& pos)   override;
+    virtual void setSize (const vec2u& size)  override;
 
     vec2f getScale() const;
     virtual void setScale(vec2f scale) override;
