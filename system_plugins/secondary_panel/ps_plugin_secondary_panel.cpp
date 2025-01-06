@@ -31,11 +31,7 @@ SecondaryPanel::SecondaryPanel()
 void SecondaryPanel::draw(psapi::sfm::IRenderWindow* render_window) {
     unsigned int pos_x = psapi::getRootWindow()->getSize().x - sprite_->getSize().x;
 
-    LOG_F(INFO, "RootWindow pos: %d x %d", psapi::getRootWindow()->getSize().x, 0);
-    LOG_F(INFO, "Sprite pos: %d x %d", pos_x, 0);
     sprite_->setPosition(static_cast<float>(pos_x), 0.0f);
-    LOG_F(INFO, "Sprite pos: %f x %f", sprite_->getPosition().x, sprite_->getPosition().y);
-    LOG_F(INFO, "Sprite size: %d x %d", sprite_->getSize().x, sprite_->getSize().y);
     sprite_->draw(render_window);
 
     color_palette_.draw(render_window);
