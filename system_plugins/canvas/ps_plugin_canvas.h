@@ -16,9 +16,9 @@ public:
     template <typename... Args>
     ScrollableDecorator(Args&&... args);
 
-    virtual void draw(psapi::sfm::IRenderWindow* render_window)         override;
-    virtual bool update(const psapi::sfm::IRenderWindow* render_window,
-                        const psapi::sfm::Event& event)                 override;
+    virtual void draw(psapi::sfm::IRenderWindow* render_window) override;
+    virtual std::unique_ptr<psapi::IAction> createAction(const psapi::sfm::IRenderWindow* renderWindow,
+                                                         const psapi::sfm::Event& event) override;
 private:
     void drawLeftBar(psapi::IRenderWindow* renderWindow) const;
     void drawDownBar(psapi::IRenderWindow* renderWindow) const;

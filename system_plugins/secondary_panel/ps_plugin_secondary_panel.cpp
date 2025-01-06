@@ -25,6 +25,7 @@ SecondaryPanel::SecondaryPanel()
 
     sprite_  = std::move(sprite_info.sprite);
     texture_ = std::move(sprite_info.texture);
+    assert(sprite_ && texture_);
 }
 
 void SecondaryPanel::draw(psapi::sfm::IRenderWindow* render_window) {
@@ -36,22 +37,73 @@ void SecondaryPanel::draw(psapi::sfm::IRenderWindow* render_window) {
     color_palette_.draw(render_window);
 }
 
-bool SecondaryPanel::update(const psapi::IRenderWindow* render_window, const psapi::Event& event) {
-    psapi::vec2i mouse_pos = psapi::sfm::Mouse::getPosition(render_window);
+class SecondaryPanelAction : public psapi::IAction {
+public:
+    SecondaryPanelAction(const psapi::IRenderWindow* render_window,
+                         const psapi::Event& event,
+                         const psapi::sfm::ISprite* sprite,
+                         ColorPalette* color_palette)
+        : render_window_(render_window),
+          event_(event),
+          sprite_(sprite),
+          color_palette_(color_palette) {
+    }
 
-    psapi::vec2i pos =  {static_cast<int>(sprite_->getPosition().x),
-                         static_cast<int>(sprite_->getPosition().y)};
-    psapi::vec2i size = {static_cast<int>(sprite_->getSize().x),
-                         static_cast<int>(sprite_->getSize().y)};
+    bool execute(const Key& key) {
+        psapi::vec2i mouse_pos = psapi::sfm::Mouse::getPosition(render_window_);
 
-    bool is_in_window = pos.x <= mouse_pos.x && mouse_pos.x < pos.x + size.x &&
-                        pos.y <= mouse_pos.y && mouse_pos.y < pos.y + size.y;
+        psapi::vec2i pos =  {static_cast<int>(sprite_->getPosition().x),
+                             static_cast<int>(sprite_->getPosition().y)};
+        psapi::vec2i size = {static_cast<int>(sprite_->getSize().x),
+                             static_cast<int>(sprite_->getSize().y)};
 
-    if (!is_in_window) {
+        bool is_in_window = pos.x <= mouse_pos.x && mouse_pos.x < pos.x + size.x &&
+                            pos.y <= mouse_pos.y && mouse_pos.y < pos.y + size.y;
+
+        if (!is_in_window) {
+            return false;
+        }
+
+        auto action_controller = psapi::getActionController();
+
+        return action_controller->execute(color_palette_->createAction(render_window_, event_));
+    }
+
+    bool isUndoable(const Key& key) {
         return false;
     }
 
-    return color_palette_.update(render_window, event);
+private:
+    const psapi::IRenderWindow* render_window_ = nullptr;
+    const psapi::Event& event_;
+    const psapi::sfm::ISprite* sprite_ = nullptr;
+    ColorPalette* color_palette_ = nullptr;
+};
+
+std::unique_ptr<psapi::IAction> SecondaryPanel::createAction(const psapi::IRenderWindow* renderWindow,
+                                                             const psapi::Event& event) {
+    return std::make_unique<SecondaryPanelAction>(renderWindow, event, sprite_.get(), &color_palette_);
+}
+
+void SecondaryPanel::addWindow(std::unique_ptr<psapi::IWindow> window) {
+    windows_.push_back(std::move(window));
+}
+
+void SecondaryPanel::removeWindow(psapi::wid_t id) {
+    for (auto it = windows_.begin(); it != windows_.end(); it++) {
+        if ((*it)->getId() == id) {
+            windows_.erase(it);
+            return;
+        }
+    }
+}
+
+void SecondaryPanel::setPos(const psapi::vec2i& pos) { 
+    assert(0);
+}
+
+void SecondaryPanel::setSize(const psapi::vec2u& size) { 
+    assert(0);
 }
 
 psapi::wid_t SecondaryPanel::getId() const {
@@ -61,6 +113,35 @@ psapi::wid_t SecondaryPanel::getId() const {
 psapi::IWindow* SecondaryPanel::getWindowById(psapi::wid_t id) {
     return const_cast<IWindow*>(static_cast<const SecondaryPanel*>(this)->getWindowById(id));
 }
+
+class WindowContainerAction : public psapi::IAction
+{
+public:
+    WindowContainerAction(std::vector<std::unique_ptr<psapi::IWindow>>& windows_,
+                          const psapi::IRenderWindow* render_window,
+                          const psapi::sfm::Event& event)
+        : windows_     (windows_),
+          render_window_(render_window),
+          event(event) {}
+
+    bool execute(const psapi::IAction::Key& key) override {
+        auto action_controller = psapi::getActionController();
+        bool result = false;
+        for (auto& window : windows_) {
+            result |= action_controller->execute(window->createAction(render_window_, event));
+        }
+        return result;
+    }
+
+    bool isUndoable(const psapi::IAction::Key&) override {
+        return false;
+    }
+
+private:
+    std::vector<std::unique_ptr<psapi::IWindow>>& windows_;
+    const psapi::IRenderWindow* render_window_;
+    const psapi::sfm::Event& event;
+};
 
 const psapi::IWindow* SecondaryPanel::getWindowById(psapi::wid_t id) const {
     if (id == kSecondaryPanelWindowId) {
@@ -88,7 +169,7 @@ psapi::vec2u SecondaryPanel::getSize() const {
 }
 
 void SecondaryPanel::setParent(const IWindow* parent) {
-    assert(0);
+    parent_ = parent;
 }
 
 void SecondaryPanel::forceActivate() {
@@ -153,6 +234,14 @@ psapi::IWindow* SecondaryPanelButton::getWindowById(psapi::wid_t id) {
 
 psapi::vec2i SecondaryPanelButton::getPos() const {
     return {0, 0};
+}
+
+void SecondaryPanelButton::setPos(const psapi::vec2i& pos) {
+    assert(0);
+}
+
+void SecondaryPanelButton::setSize(const psapi::vec2u& size) {
+    assert(0);
 }
 
 psapi::vec2u SecondaryPanelButton::getSize() const {
@@ -235,34 +324,60 @@ void ColorPalette::draw(psapi::IRenderWindow* renderWindow) {
     rect->draw(renderWindow);
 }
 
-bool ColorPalette::update(const psapi::IRenderWindow* render_window,
-                          const psapi::Event& event) {
+class ColorPaletteAction : public psapi::IAction {
+public:
+    ColorPaletteAction(const psapi::IRenderWindow* render_window_,
+                       const psapi::Event& event,
+                       const SecondaryPanel* parent_panel_,
+                       Color* color)
+        : render_window_(render_window_),
+          event_(event),
+          parent_panel_(parent_panel_),
+          color_(color) {
+    }
 
-    psapi::vec2i mouse_pos = psapi::sfm::Mouse::getPosition(render_window);
+    bool execute(const Key&) override {
+        psapi::vec2i mouse_pos = psapi::sfm::Mouse::getPosition(render_window_);
 
-    psapi::vec2i pos =  {static_cast<int>(parent_panel_->getPos().x + (int)kColorSize),
-                         static_cast<int>(parent_panel_->getPos().y + (int)kColorSize)};
-    psapi::vec2i size = {static_cast<int>(kColorPaletteWidthColors  * kColorSize),
-                         static_cast<int>(kColorPaletteHeightColors * kColorSize)};
+        psapi::vec2i pos =  {static_cast<int>(parent_panel_->getPos().x + (int)kColorSize),
+                             static_cast<int>(parent_panel_->getPos().y + (int)kColorSize)};
+        psapi::vec2i size = {static_cast<int>(kColorPaletteWidthColors  * kColorSize),
+                             static_cast<int>(kColorPaletteHeightColors * kColorSize)};
 
-    bool is_in_window = pos.x <= mouse_pos.x && mouse_pos.x < pos.x + size.x &&
-                        pos.y <= mouse_pos.y && mouse_pos.y < pos.y + size.y;
+        bool is_in_window = pos.x <= mouse_pos.x && mouse_pos.x < pos.x + size.x &&
+                            pos.y <= mouse_pos.y && mouse_pos.y < pos.y + size.y;
 
-    if (!is_in_window || event.type != psapi::Event::MouseButtonReleased) {
+        if (!is_in_window || event_.type != psapi::Event::MouseButtonReleased) {
+            return false;
+        }
+
+        int color_index_x = (mouse_pos.x - pos.x) / (int)kColorSize;
+        int color_index_y = (mouse_pos.y - pos.y) / (int)kColorSize;
+
+        *color_ = kColorPaletteColors[color_index_y][color_index_x];
+
+        LOG_F(INFO, "Color selected: %d, %d", color_index_x, color_index_y);
+        LOG_F(INFO, "Color: %d, %d, %d, %d", color_->r, color_->g, color_->b, color_->a);
+
         return false;
     }
 
-    int color_index_x = (mouse_pos.x - pos.x) / (int)kColorSize;
-    int color_index_y = (mouse_pos.y - pos.y) / (int)kColorSize;
+    bool isUndoable(const Key&) override {
+        return false; 
+    }
 
-    color_ = kColorPaletteColors[color_index_y][color_index_x];
+private:
+    const psapi::IRenderWindow* render_window_;
+    const psapi::Event& event_;
+    const SecondaryPanel* parent_panel_;
 
-    LOG_F(INFO, "Color selected: %d, %d", color_index_x, color_index_y);
-    LOG_F(INFO, "Color: %d, %d, %d, %d", color_.r, color_.g, color_.b, color_.a);
+    Color* color_;
+};
 
-    return false;
+std::unique_ptr<psapi::IAction> ColorPalette::createAction(const psapi::IRenderWindow* renderWindow,
+                                             const psapi::Event& event) {
+    return std::make_unique<ColorPaletteAction>(renderWindow, event, parent_panel_, &color_);
 }
-
 Color ColorPalette::getColor() const {
     return color_;
 }

@@ -167,11 +167,11 @@ void ScrollableDecorator<T>::drawDownBar(psapi::IRenderWindow* renderWindow) con
 }
 
 template <typename T>
-bool ScrollableDecorator<T>::update(const psapi::IRenderWindow* render_window,
-                                    const psapi::Event& event) {
-    return Canvas::update(render_window, event) ||
-            handleLeftBar(render_window, event) ||
-            handleDownBar(render_window, event);
+std::unique_ptr<psapi::IAction> ScrollableDecorator<T>::createAction(const psapi::sfm::IRenderWindow* renderWindow,
+                                                                     const psapi::sfm::Event& event) {
+    handleLeftBar(renderWindow, event);
+    handleDownBar(renderWindow, event);
+    return T::createAction(renderWindow, event);
 }
 
 static inline bool isMouseInRect(psapi::vec2i pos, psapi::vec2i size,

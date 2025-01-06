@@ -7,6 +7,16 @@
 
 #include "loguru.hpp"
 
+// loguru violates odr, so disable this
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+#ifdef __cplusplus
+extern "C"
+#endif
+const char *__asan_default_options() {
+  return "detect_odr_violation=0";
+}
+#endif
+
 using namespace psapi;
 
 const std::string kPluginPaths[] = {
@@ -33,17 +43,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    auto action_controller = psapi::getActionController();
+
     while (window.isOpen()) {
         sfm::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sfm::Event::Closed) {
                 window.close();
             }
-            getRootWindow()->update(&window, event);
+            action_controller->execute(getRootWindow()->createAction(&window, event));
         }
 
         sfm::Event idle_event = {.type = sfm::Event::None};
-        getRootWindow()->update(&window, idle_event);
+
+        action_controller->execute(getRootWindow()->createAction(&window, idle_event));
         getRootWindow()->draw(&window);
 
         window.display();

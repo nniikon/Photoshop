@@ -80,10 +80,14 @@ public:
     Color getPixel(unsigned int x, unsigned int y) const override;
     Color getPixel(vec2u pos)                      const override;
 
+    vec2i getPos() const override;
+    void setPos(const vec2i& pos) override;
+
     static std::unique_ptr<IImage> create();
 
 private:
     sf::Image image_;
+    vec2i pos_ = {0, 0};
 
     friend class Texture;
 };

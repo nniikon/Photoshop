@@ -2,6 +2,7 @@
 #define API_IMPLEMENTATION_PS_BAR_H_
 
 #include "api_bar.hpp"
+#include <vector>
 
 namespace ps {
 
@@ -20,9 +21,9 @@ public:
                const psapi::IBar* toolbar,
                std::unique_ptr<ButtonAction> action);
 
-    virtual void draw(psapi::IRenderWindow* renderWindow)         override;
-    virtual bool update(const psapi::IRenderWindow* renderWindow,
-                        const psapi::sfm::Event& event)           override;
+    virtual void draw(psapi::IRenderWindow* renderWindow) override;
+    virtual std::unique_ptr<psapi::IAction> createAction(const psapi::IRenderWindow* render_window,
+                                                         const psapi::Event& event) override;
 
     virtual psapi::wid_t getId() const override;
 
@@ -31,6 +32,9 @@ public:
 
     virtual psapi::vec2i getPos()  const override;
     virtual psapi::vec2u getSize() const override;
+
+    virtual void setSize(const psapi::vec2u& size) override;
+    virtual void setPos(const psapi::vec2i& pos)   override;
 
     virtual void setParent(const IWindow* parent) override;
 
@@ -78,9 +82,9 @@ public:
     //ABar(const std::string& bar_info_path);
     virtual ~ABar();
 
-    virtual void draw(psapi::IRenderWindow* renderWindow)         override;
-    virtual bool update(const psapi::IRenderWindow* renderWindow,
-                        const psapi::sfm::Event& event)           override;
+    virtual void draw(psapi::IRenderWindow* renderWindow) override;
+    virtual std::unique_ptr<psapi::IAction> createAction(const psapi::IRenderWindow* renderWindow,
+                                                         const psapi::Event& event) override;
 
     virtual       psapi::IWindow* getWindowById(psapi::wid_t id)       override;
     virtual const psapi::IWindow* getWindowById(psapi::wid_t id) const override;
@@ -92,6 +96,9 @@ public:
     virtual void setParent(const IWindow* parent) override;
     virtual void forceDeactivate()                override;
     virtual void forceActivate()                  override; 
+
+    virtual void setSize(const psapi::vec2u& size) override;
+    virtual void setPos(const psapi::vec2i& pos)   override;
 
     virtual void addWindow(std::unique_ptr<IWindow> window) override;
     virtual void removeWindow(psapi::wid_t id)              override;

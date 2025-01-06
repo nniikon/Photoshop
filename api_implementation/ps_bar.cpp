@@ -32,8 +32,8 @@ void ABarButton::draw(psapi::IRenderWindow* renderWindow) {
 
     sprite_->setPosition(static_cast<float>(pos_.x),
                          static_cast<float>(pos_.y));
-    float factor_x = static_cast<float>(size_.x) / static_cast<float>(sprite_->getGlobalBounds().width);
-    float factor_y = static_cast<float>(size_.y) / static_cast<float>(sprite_->getGlobalBounds().height);
+    float factor_x = static_cast<float>(size_.x) / static_cast<float>(sprite_->getGlobalBounds().size.x);
+    float factor_y = static_cast<float>(size_.y) / static_cast<float>(sprite_->getGlobalBounds().size.y);
     sprite_->setScale(factor_x, factor_y);
 
     renderWindow->draw(sprite_.get());
@@ -41,53 +41,93 @@ void ABarButton::draw(psapi::IRenderWindow* renderWindow) {
     const_cast<psapi::IBar*>(toolbar_)->finishButtonDraw(renderWindow, this);
 }
 
-bool ABarButton::update(const psapi::IRenderWindow* renderWindow,
-                        const psapi::sfm::Event& event) {
-    if (!is_active_) {
-        return false;
-    }
+class ABarButtonAction : public psapi::IAction {
+public:
+    ABarButtonAction(const psapi::IRenderWindow* renderWindow,
+                     const psapi::sfm::Event& event,
+                     psapi::IBarButton::State* state,
+                     ButtonAction* action,
+                     psapi::vec2i* pos,
+                     psapi::vec2i* size)
+        : renderWindow_(renderWindow),
+          event_(event),
+          state_(state),
+          action_(action),
+          pos_(pos),
+          size_(size) {}
 
-    psapi::vec2i mouse_pos = psapi::sfm::Mouse::getPosition(renderWindow);
-    
-    bool is_in_window = pos_.x <= mouse_pos.x && mouse_pos.x < pos_.x + size_.x &&
-                        pos_.y <= mouse_pos.y && mouse_pos.y < pos_.y + size_.y;
+    virtual bool execute(const Key& key) override {
+        psapi::vec2i mouse_pos = psapi::sfm::Mouse::getPosition(renderWindow_);
+        
+        bool is_in_window = pos_->x <= mouse_pos.x && mouse_pos.x < pos_->x + size_->x &&
+                            pos_->y <= mouse_pos.y && mouse_pos.y < pos_->y + size_->y;
 
-    if (state_ == psapi::IBarButton::State::Released) {
-        if (action_) {
-            action_->operator()(renderWindow, event);
+        if (*state_ == psapi::IBarButton::State::Released) {
+            if (action_) {
+                action_->operator()(renderWindow_, event_);
+                return true;
+            }
+        }
+
+        // FIXME: rewrite logic
+        if (is_in_window && event_.type == psapi::sfm::Event::MouseButtonReleased) {
+            if (*state_ == psapi::IBarButton::State::Press) {
+                if (action_->activate()) {
+                    *state_ = psapi::IBarButton::State::Released;
+                }
+                return true;
+            }
+            if (*state_ == psapi::IBarButton::State::Released) {
+                *state_ = psapi::IBarButton::State::Normal; 
+            }
+        }
+
+        if (*state_ == psapi::IBarButton::State::Released) {
+            return false;
+        }
+
+        if (is_in_window && event_.type == psapi::sfm::Event::MouseButtonPressed) {
+            *state_ = psapi::IBarButton::State::Press;
             return true;
         }
-    }
 
-    // FIXME: rewrite logic
-    if (is_in_window && event.type == psapi::sfm::Event::MouseButtonReleased) {
-        if (state_ == psapi::IBarButton::State::Press) {
-            if (action_->activate()) {
-                state_ = psapi::IBarButton::State::Released;
+        if (is_in_window) {
+            if (*state_ == psapi::IBarButton::State::Normal) {
+                *state_ = psapi::IBarButton::State::Hover;
             }
             return true;
         }
-        if (state_ == psapi::IBarButton::State::Released) {
-            state_ = psapi::IBarButton::State::Normal; 
+        else {
+            *state_ = psapi::IBarButton::State::Normal;
+            return false;
         }
     }
-    if (state_ == psapi::IBarButton::State::Released) {
-        return false;
-    }
-    if (is_in_window && event.type == psapi::sfm::Event::MouseButtonPressed) {
-        state_ = psapi::IBarButton::State::Press;
+
+    virtual bool isUndoable(const Key& key) override {
         return true;
     }
-    if (is_in_window) {
-        if (state_ == psapi::IBarButton::State::Normal) {
-            state_ = psapi::IBarButton::State::Hover;
-        }
-        return true;
+
+private:
+    const psapi::IRenderWindow* renderWindow_;
+    const psapi::sfm::Event&    event_;
+    psapi::IBarButton::State*   state_;
+    ButtonAction*               action_;
+    psapi::vec2i*               pos_;
+    psapi::vec2i*               size_;
+};
+
+std::unique_ptr<psapi::IAction> ABarButton::createAction(const psapi::IRenderWindow* render_window,
+                                                         const psapi::Event& event) {
+    if (!is_active_) {
+        assert(0);
     }
-    else {
-        state_ = psapi::IBarButton::State::Normal;
-        return false;
-    }
+
+    return std::make_unique<ABarButtonAction>(render_window,
+                                              event,
+                                              &state_,
+                                              action_.get(),
+                                              &pos_,
+                                              &size_);
 }
 
 psapi::IWindow* ABarButton::getWindowById(psapi::wid_t id) {
@@ -110,6 +150,14 @@ psapi::vec2u ABarButton::getSize() const {
     psapi::vec2u size = {static_cast<unsigned int>(size_.x),
                          static_cast<unsigned int>(size_.y)};
     return size;
+}
+
+void ABarButton::setSize(const psapi::vec2u& size) {
+    size_ = size;
+}
+
+void ABarButton::setPos(const psapi::vec2i& pos) {
+    pos_ = pos;
 }
 
 psapi::wid_t ABarButton::getId() const {
@@ -209,49 +257,64 @@ void ABar::draw(psapi::IRenderWindow* renderWindow) {
     drawChildren(renderWindow);
 }
 
-void ABar::handleDoubleActiveButton() {
-    ssize_t last_active = last_active_button_it;
+class ABarAction : public psapi::IAction {
+public:
+    ABarAction(const psapi::IRenderWindow* render_window,
+               const psapi::Event& event,
+               std::vector<std::unique_ptr<psapi::IBarButton>>& windows,
+               ssize_t* last_active_button_it)
+        : render_window_(render_window),
+          event_(event),
+          windows_(windows),
+          last_active_button_it_(last_active_button_it) {
+    }
 
-    int n_active_buttons = 0;
-    ssize_t new_active = -1;
-    for (size_t i = 0; i < windows_.size(); i++) {
-        if (windows_[i]->getState() == psapi::IBarButton::State::Released) {         
-            n_active_buttons++; 
-            new_active = static_cast<ssize_t>(i);
+    void handleDoubleActiveButton() {
+        ssize_t last_active = *last_active_button_it_;
+
+        int n_active_buttons = 0;
+        ssize_t new_active = -1;
+        for (size_t i = 0; i < windows_.size(); i++) {
+            if (windows_[i]->getState() == psapi::IBarButton::State::Released) {         
+                n_active_buttons++; 
+                new_active = static_cast<ssize_t>(i);
+            }
+        }
+
+        if (n_active_buttons > 1) {
+            windows_[(size_t)last_active]->setState(psapi::IBarButton::State::Normal);
+        }
+        else if (n_active_buttons == 1) {
+            *last_active_button_it_ = new_active;
         }
     }
 
-    if (n_active_buttons > 1) {
-        windows_[(size_t)last_active]->setState(psapi::IBarButton::State::Normal);
-    }
-    else if (n_active_buttons == 1) {
-        last_active_button_it = new_active;
-    }
-}
+    virtual bool execute(const Key&) override {
+        auto action_controller = psapi::getActionController();
+        bool result = false;
+        for (const auto& window : windows_) {
+            action_controller->execute(window->createAction(render_window_, event_));
+        }
 
-bool ABar::updateChildren(const psapi::IRenderWindow* renderWindow,
-                          const psapi::sfm::Event& event) {
-    bool result = false;
-    for (const auto& window : windows_) {
-        result |= window->update(renderWindow, event);
+        handleDoubleActiveButton();
+
+        return result;
     }
 
-    handleDoubleActiveButton();
-
-    return result;
-}
-
-bool ABar::update(const psapi::IRenderWindow* renderWindow,
-                  const psapi::sfm::Event& event) {
-    if (!is_active_) {
+    virtual bool isUndoable(const Key& key) override {
         return false;
     }
 
-    if (updateChildren(renderWindow, event)) {
-        return true;
-    }
+private:
+    const psapi::IRenderWindow* render_window_;
+    const psapi::Event& event_;
+    std::vector<std::unique_ptr<psapi::IBarButton>>& windows_;
+    ssize_t* last_active_button_it_ = nullptr;
+};
 
-    return false;
+std::unique_ptr<psapi::IAction> ABar::createAction(const psapi::IRenderWindow* render_window,
+                                                   const psapi::Event& event) {
+    return std::make_unique<ABarAction>(render_window, event, windows_, &last_active_button_it);
 }
 
 const psapi::IWindow* ABar::getWindowById(psapi::wid_t id) const {
@@ -290,6 +353,14 @@ void ABar::setParent(const IWindow* parent) {
     parent_ = parent;
 }
 
+void ABar::setSize(const psapi::vec2u& size) {
+    size_ = size;
+}
+
+void ABar::setPos(const psapi::vec2i& pos) {
+    pos_ = pos;
+}
+
 void ABar::forceDeactivate() {
     is_active_ = false;
 }
@@ -314,7 +385,7 @@ void ABar::removeWindow(psapi::wid_t id) {
             break;
         }
     }
-    
+
     n_buttons_ -= 1;
 }
 

@@ -72,7 +72,8 @@ static SpriteInfo ParseConfigFromContent(const std::string& file_content) {
     std::unique_ptr<ISprite> sprite = psapi::sfm::ISprite::create();
     sprite->setTexture(texture.get());
 
-    psapi::sfm::IntRect rect = {image_pos.x, image_pos.y, image_size.x, image_size.y};
+    psapi::sfm::IntRect rect = {{ image_pos.x,  image_pos.y},
+                                {static_cast<unsigned int>(image_size.x), static_cast<unsigned int>(image_size.y)}};
     sprite->setTextureRect(rect);
 
     info.texture = std::move(texture);

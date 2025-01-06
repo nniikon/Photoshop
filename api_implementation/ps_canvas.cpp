@@ -3,7 +3,6 @@
 #define LOGURU_WITH_STREAMS 1
 #include "loguru.hpp"
 
-#include "sfm_implementation.h"
 #include <cassert>
 
 using namespace ps;
@@ -107,10 +106,10 @@ void Canvas::DrawLayer(const Layer& layer, psapi::IRenderWindow* renderWindow) {
     texture_->update(layer.pixels_.data());
     sprite_->setTexture(texture_.get());
     sprite_->setScale(scale_.x, scale_.y);
-    sprite_->setTextureRect({static_cast<int>((float)layer.size_.x * offset_.x),
-                             static_cast<int>((float)layer.size_.y * offset_.y),
-                             static_cast<int>((float)layer.size_.x / scale_.x),
-                             static_cast<int>((float)layer.size_.y / scale_.y)});
+    sprite_->setTextureRect({{static_cast<         int>((float)layer.size_.x * offset_.x),
+                              static_cast<         int>((float)layer.size_.y * offset_.y)},
+                             {static_cast<unsigned int>((float)layer.size_.x / scale_.x),
+                              static_cast<unsigned int>((float)layer.size_.y / scale_.y)}});
     sprite_->setPosition(static_cast<float>(pos_.x),
                          static_cast<float>(pos_.y));
 
@@ -141,26 +140,81 @@ bool Canvas::setLastMousePos(const psapi::IRenderWindow* renderWindow) {
     return is_in_window;
 }
 
-bool Canvas::update(const psapi::IRenderWindow* renderWindow,
-                    const psapi::sfm::Event& event) {
-    if (!is_active_) {
+class CanvasAction : public psapi::IAction {
+public:
+    CanvasAction(const psapi::IRenderWindow* render_window,
+                 const psapi::sfm::Event& event,
+                 bool* is_pressed,
+                 vec2i* last_mouse_pos,
+                 vec2i pos,
+                 vec2i size,
+                 vec2f scale,
+                 vec2f offset)
+        : render_window_(render_window),
+          event_(event),
+          is_pressed_(is_pressed),
+          last_mouse_pos_(last_mouse_pos),
+          pos_(pos),
+          size_(size),
+          scale_(scale),
+          offset_(offset) {
+    }
+
+    bool setLastMousePos() {
+        vec2i mouse_pos = psapi::sfm::Mouse::getPosition(render_window_);
+        
+        bool is_in_window = pos_.x <= mouse_pos.x && mouse_pos.x < pos_.x + size_.x &&
+                            pos_.y <= mouse_pos.y && mouse_pos.y < pos_.y + size_.y;
+
+        *last_mouse_pos_ = {static_cast<int>((float)(mouse_pos.x - pos_.x) / scale_.x + offset_.x * (float)size_.x),
+                            static_cast<int>((float)(mouse_pos.y - pos_.y) / scale_.y + offset_.y * (float)size_.y)};
+
+        return is_in_window;
+    }
+
+    bool execute(const Key&) override {
+        if (event_.type == psapi::sfm::Event::MouseButtonReleased) {
+            *is_pressed_ = false;
+        }
+
+        bool is_in_window = setLastMousePos();
+        if (!is_in_window) {
+            return false;
+        }
+
+        if (event_.type == psapi::sfm::Event::MouseButtonPressed) {
+            *is_pressed_ = true;
+        }
+
         return false;
     }
 
-    if (event.type == psapi::sfm::Event::MouseButtonReleased) {
-        is_pressed_ = false;
-    }
-
-    bool is_in_window = setLastMousePos(renderWindow);
-    if (!is_in_window) {
+    bool isUndoable(const Key&) override {
         return false;
     }
 
-    if (event.type == psapi::sfm::Event::MouseButtonPressed) {
-        is_pressed_ = true;
-    }
+private:
+    const psapi::IRenderWindow* render_window_;
+    const psapi::sfm::Event& event_;
+    bool* is_pressed_;
+    vec2i* last_mouse_pos_;
 
-    return false;
+    vec2i pos_      = {0, 0};
+    vec2i size_     = {0, 0};
+    vec2f scale_    = {1.0f, 1.0f};
+    vec2f offset_   = {0.0f, 0.0f};
+};
+
+std::unique_ptr<psapi::IAction> Canvas::createAction(const psapi::IRenderWindow* renderWindow,
+                                                     const psapi::Event& event){
+    return std::make_unique<CanvasAction>(renderWindow,
+                                          event,
+                                          &is_pressed_,
+                                          &last_mouse_pos_,
+                                          pos_,
+                                          size_,
+                                          scale_,
+                                          offset_);
 }
 
 psapi::wid_t Canvas::getId() const {
@@ -271,11 +325,11 @@ bool Canvas::insertEmptyLayer(size_t index) {
     return true;
 }
 
-void Canvas::setPos(vec2i pos) {
+void Canvas::setPos(const vec2i& pos) {
     pos_ = pos;
 }
 
-void Canvas::setSize(vec2i size) {
+void Canvas::setSize(const vec2u& size) {
     size_ = size;
 
     temp_layer_->changeSize(size);

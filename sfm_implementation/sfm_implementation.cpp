@@ -230,6 +230,14 @@ std::unique_ptr<IImage> IImage::create() {
     return std::make_unique<Image>();
 }
 
+vec2i Image::getPos() const {
+    return pos_;
+}
+
+void Image::setPos(const vec2i& pos) {
+    pos_ = pos; 
+}
+
 // Texture implementation
 
 Texture::Texture()
@@ -240,12 +248,14 @@ bool Texture::create(unsigned int width, unsigned int height) {
 }
 
 bool Texture::loadFromFile(const std::string& filename, const IntRect& area) {
-    sf::IntRect sf_area(area.top_x, area.top_y, area.width, area.height);
+    sf::IntRect sf_area(area.pos.x, area.pos.y, static_cast<int>(area.size.x),
+                                                static_cast<int>(area.size.y));
     return texture_.loadFromFile(filename, sf_area);
 }
 
 bool Texture::loadFromMemory(const void* data, std::size_t size, const IntRect& area) {
-    sf::IntRect sf_area(area.top_x, area.top_y, area.width, area.height);
+    sf::IntRect sf_area(area.pos.x, area.pos.y, static_cast<int>(area.size.x),
+                                                static_cast<int>(area.size.y));
     return texture_.loadFromMemory(data, size, sf_area);
 }
 
@@ -297,10 +307,10 @@ void Sprite::setTexture(const ITexture *texture, bool reset_rect) {
 }
 
 void Sprite::setTextureRect(const IntRect &rectangle) {
-    sprite_.setTextureRect(sf::IntRect(static_cast<int>(rectangle.top_x),
-                                       static_cast<int>(rectangle.top_y),
-                                       static_cast<int>(rectangle.width),
-                                       static_cast<int>(rectangle.height)));
+    sprite_.setTextureRect(sf::IntRect(static_cast<int>(rectangle.pos.x),
+                                       static_cast<int>(rectangle.pos.y),
+                                       static_cast<int>(rectangle.size.x),
+                                       static_cast<int>(rectangle.size.y)));
 }
 
 void Sprite::setPosition(float x, float y) {
@@ -343,8 +353,8 @@ const vec2f Sprite::getPosition() const
 
 IntRect Sprite::getGlobalBounds() const {
     sf::FloatRect bounds = sprite_.getGlobalBounds();
-    return { static_cast<int>(bounds.left),  static_cast<int>(bounds.top),
-             static_cast<int>(bounds.width), static_cast<int>(bounds.height) };
+    return { {static_cast<         int>(bounds.left),  static_cast<         int>(bounds.top)},
+             {static_cast<unsigned int>(bounds.width), static_cast<unsigned int>(bounds.height)} };
 }
 
 void Sprite::draw(IRenderWindow *window) const {

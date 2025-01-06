@@ -37,8 +37,8 @@ public:
     virtual bool removeLayer     (size_t index) = 0;
     virtual bool insertEmptyLayer(size_t index) = 0;
 
-    virtual void setPos  (sfm::vec2i pos)   = 0;
-    virtual void setSize (sfm::vec2i size)  = 0;
+    virtual void setPos  (const sfm::vec2i& pos)   = 0;
+    virtual void setSize (const sfm::vec2u& size)  = 0;
     virtual void setScale(sfm::vec2f scale) = 0;
 
     virtual sfm::vec2i getMousePosition() const = 0;

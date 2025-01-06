@@ -62,15 +62,16 @@ public:
     virtual Color getPixel(unsigned int x, unsigned int y) const = 0;
     virtual Color getPixel(vec2u pos) const = 0;
 
+    virtual vec2i getPos() const = 0;
+    virtual void setPos(const vec2i &pos) = 0;
+
     static std::unique_ptr<IImage> create();
 };
 
 struct IntRect
 {
-    int top_x;
-    int top_y;
-    int width;
-    int height;
+    vec2i pos;
+    vec2u size;
 };
 
 class ITexture
@@ -141,10 +142,13 @@ public:
 
     virtual ~IText() = default;
 
+    virtual IntRect getGlobalBounds() const = 0;
     virtual void setString(const std::string& string) = 0;
     virtual void setFont(const IFont* font)           = 0;
     virtual void setCharacterSize(unsigned int size)  = 0;
     virtual void setStyle(uint32_t style)             = 0;
+    virtual void setPos(const vec2f &pos)             = 0;
+    virtual void setSize(const vec2f &size)           = 0;
     virtual void setFillColor(const Color* color)     = 0;
     virtual void setOutlineColor(const Color* color)  = 0;
     virtual void setOutlineThickness(float thickness) = 0;

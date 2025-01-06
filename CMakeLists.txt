@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.10)
 
 project(ps VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
-    -Wall -O2 \
+    -Wall \
     -Wmissing-declarations \
     -Wcast-align \
     -Wcast-qual \
@@ -19,6 +19,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
     -Wformat-nonliteral \
     -Wformat-security \
     -Wformat=2 \
+    -Winline \
     -Wpacked \
     -Wpointer-arith \
     -Winit-self \
@@ -39,7 +40,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} \
     -fcheck-new \
     -fstack-protector \
     -fstrict-overflow \
-    -fno-omit-frame-pointer -fPIC"
+    -fno-omit-frame-pointer -fPIC\
+    -fsanitize=address,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr"
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/sfm_implementation)
