@@ -25,11 +25,6 @@ void ABarButton::draw(psapi::IRenderWindow* renderWindow) {
         return;
     }
 
-    psapi::ChildInfo info = toolbar_->getNextChildInfo();
-    
-    pos_  = info.pos;
-    size_ = info.size;
-
     sprite_->setPosition(static_cast<float>(pos_.x),
                          static_cast<float>(pos_.y));
     float factor_x = static_cast<float>(size_.x) / static_cast<float>(sprite_->getGlobalBounds().size.x);
@@ -215,7 +210,6 @@ ABar::ABar(std::unique_ptr<psapi::sfm::ISprite> sprite,
       button_size_(button_size),
       n_buttons_in_row_(n_buttons_in_row),
       n_buttons_(0),
-      cur_button_it(0),
       sprite_               (std::move(sprite)),
       hover_button_sprite_  (std::move(hover_button_sprite)),
       pressed_button_sprite_(std::move(pressed_button_sprite)),
@@ -227,8 +221,15 @@ ABar::~ABar()
 {}
 
 void ABar::drawChildren(psapi::IRenderWindow* renderWindow) {
-    for (const auto& window : windows_) {
-        window->draw(renderWindow);
+    for (size_t i = 0ul; i < windows_.size(); i++) {
+
+        ChildInfo info = getChildInfo(static_cast<int>(i));
+        windows_[i].get()->setPos (info.pos);
+        windows_[i].get()->setSize(info.size);
+
+        windows_[i]->draw(renderWindow);
+
+        finishButtonDraw(renderWindow, windows_[i].get());
     }
 }
 
@@ -389,19 +390,19 @@ void ABar::removeWindow(psapi::wid_t id) {
     n_buttons_ -= 1;
 }
 
-psapi::ChildInfo ABar::getNextChildInfo() const {
-    int row = cur_button_it / n_buttons_in_row_;
-    int col = cur_button_it % n_buttons_in_row_;
+ABar::ChildInfo ABar::getChildInfo(int child_num) const {
+    int row = child_num / n_buttons_in_row_;
+    int col = child_num % n_buttons_in_row_;
 
     int x = side_gap_.x + col * (button_size_.x + inbutton_gap_.x) + pos_.x;
     int y = side_gap_.y + row * (button_size_.y + inbutton_gap_.y) + pos_.y;
 
-    cur_button_it = (cur_button_it + 1) % n_buttons_;
-
-    return psapi::ChildInfo{{x, y}, {button_size_.x, button_size_.y}};
+    return ABar::ChildInfo{{x, y},
+                           {static_cast<unsigned int>(button_size_.x),
+                            static_cast<unsigned int>(button_size_.y)}};
 }
 
-void ABar::finishButtonDraw(psapi::IRenderWindow* renderWindow,
+void ABar::finishButtonDraw(psapi::IRenderWindow* render_window,
                             const psapi::IBarButton* button) const {
 
     psapi::vec2i button_pos = button->getPos();
@@ -414,17 +415,17 @@ void ABar::finishButtonDraw(psapi::IRenderWindow* renderWindow,
 
         case psapi::IBarButton::State::Hover:
             hover_button_sprite_->setPosition(posf_x, posf_y);
-            renderWindow->draw(hover_button_sprite_.get());
+            render_window->draw(hover_button_sprite_.get());
             break;
 
         case psapi::IBarButton::State::Press:
             pressed_button_sprite_->setPosition(posf_x, posf_y);
-            renderWindow->draw(pressed_button_sprite_.get());
+            render_window->draw(pressed_button_sprite_.get());
             break;
 
         case psapi::IBarButton::State::Released:
             active_button_sprite_->setPosition(posf_x, posf_y);
-            renderWindow->draw(active_button_sprite_.get());
+            render_window->draw(active_button_sprite_.get());
             break;
 
         default:
@@ -435,4 +436,12 @@ void ABar::finishButtonDraw(psapi::IRenderWindow* renderWindow,
 
 bool ABar::isActive() const {
     return is_active_;
+}
+
+bool ABar::unPressAllButtons() {
+    for (auto& window : windows_) {
+        window->setState(psapi::IBarButton::State::Normal);
+    }
+
+    return true;
 }
