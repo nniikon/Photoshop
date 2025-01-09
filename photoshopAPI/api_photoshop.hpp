@@ -43,14 +43,14 @@ const wid_t kInvalidWindowId = -1;
 sfm::IntRect getCanvasIntRect();
 sfm::IntRect getToolbarIntRect();
 sfm::IntRect getOptionsBarIntRect();
-sfm::IntRect getInstrumentOptionsIntRect();
+sfm::IntRect getMenuBarIntRect();
 
 /**
  * @brief Get the size of the screen
  *
  * @return psapi::sfm::vec2i
  */
-psapi::sfm::vec2i getScreenSize();
+psapi::sfm::vec2u getScreenSize();
 
 /**
  * @brief Interface representing a basic window.
