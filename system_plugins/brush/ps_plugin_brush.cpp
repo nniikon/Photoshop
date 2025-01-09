@@ -98,7 +98,7 @@ constexpr float kTimeStep = 0.00001f;
 
 bool BrushAction::operator()(const psapi::IRenderWindow* renderWindow,
                              const psapi::sfm::Event& event) {
-    if (!canvas_ || !canvas_->isPressed()) {
+    if (!canvas_ || !canvas_->isPressedLeftMouseButton()) {
         mouse_points_.clear();
         return false;
     }

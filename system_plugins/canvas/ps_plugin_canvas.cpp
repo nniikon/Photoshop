@@ -6,7 +6,7 @@
 
 bool loadPlugin() {
     auto canvas = std::make_unique<ps::ScrollableDecorator<ps::Canvas>>(
-            psapi::vec2i{600, 950},
+            psapi::vec2u{600, 950},
             psapi::vec2i{300, 50}
     );
 
