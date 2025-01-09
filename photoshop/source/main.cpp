@@ -74,7 +74,7 @@ int onLoadPlugins() {
             return 1;
         }
 
-        auto onLoadPlugin = (bool (*)(void))dlsym(lib, "loadPlugin");
+        auto onLoadPlugin = (bool (*)(void))dlsym(lib, "onLoadPlugin");
         if (!onLoadPlugin) {
 
             LOG_F(ERROR, "Can't load plugin: %s", dlerror());
