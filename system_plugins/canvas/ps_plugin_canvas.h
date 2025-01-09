@@ -4,8 +4,8 @@
 #include "ps_canvas.h"
 
 extern "C" {
-    bool   loadPlugin();
-    void unloadPlugin();
+    bool   onLoadPlugin();
+    void onUnloadPlugin();
 }
 
 namespace ps {

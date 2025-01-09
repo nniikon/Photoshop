@@ -30,14 +30,14 @@ const std::string kPluginPaths[] = {
     "./system_plugins/filters/libplugin_filters.so",
 };
 
-int loadPlugins();
+int onLoadPlugins();
 
 int main(int argc, char *argv[]) {
     loguru::init(argc, argv);
 
     sfm::RenderWindow window(1200, 1080, "Photoshop");
 
-    int err = loadPlugins();
+    int err = onLoadPlugins();
     if (err) {
         LOG_F(ERROR, "Can't load plugins");
         return 1;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int loadPlugins() {
+int onLoadPlugins() {
     for (const auto& path : kPluginPaths) {
         void* lib = dlopen(path.c_str(), RTLD_LAZY);
         if (!lib) {
@@ -74,14 +74,14 @@ int loadPlugins() {
             return 1;
         }
 
-        auto loadPlugin = (bool (*)(void))dlsym(lib, "loadPlugin");
-        if (!loadPlugin) {
+        auto onLoadPlugin = (bool (*)(void))dlsym(lib, "loadPlugin");
+        if (!onLoadPlugin) {
 
             LOG_F(ERROR, "Can't load plugin: %s", dlerror());
             return 1;
         }
 
-        loadPlugin();
+        onLoadPlugin();
     }
 
     return 0;

@@ -10,8 +10,8 @@ namespace psapi {
 }
 
 extern "C" {
-    bool   loadPlugin();
-    void unloadPlugin();
+    bool   onLoadPlugin();
+    void onUnloadPlugin();
 }
 
 class FilterNegAction : public ps::ButtonAction {

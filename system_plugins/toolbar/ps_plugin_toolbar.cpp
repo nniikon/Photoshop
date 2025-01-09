@@ -17,7 +17,7 @@ const psapi::sfm::IntRect kHoverButtonTextureArea   = {{256,   0}, {64,    64}};
 const psapi::sfm::IntRect kPressedButtonTextureArea = {{256,  64}, {64,    64}};
 const psapi::sfm::IntRect kActiveButtonTextureArea  = {{256, 128}, {64,    64}};
     
-bool loadPlugin() {
+bool onLoadPlugin() {
 
     texture = psapi::sfm::ITexture::create().release();
     texture->loadFromFile("./assets/toolbar.png");
@@ -55,6 +55,6 @@ bool loadPlugin() {
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
     delete texture;
 }

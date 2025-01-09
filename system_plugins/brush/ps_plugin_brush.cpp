@@ -132,7 +132,7 @@ bool BrushAction::activate() {
     return true;
 }
 
-bool loadPlugin() {
+bool onLoadPlugin() {
     texture = psapi::sfm::ITexture::create().release(); // raii rip
     texture->loadFromFile("./assets/buttons.png");
 
@@ -156,6 +156,6 @@ bool loadPlugin() {
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
     delete texture;
 }
