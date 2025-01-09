@@ -6,8 +6,8 @@
 #include "api_sfm.hpp"
 
 extern "C" {
-    bool loadPlugin();
-    void unloadPlugin();
+    bool onLoadPlugin();
+    void onUnloadPlugin();
 }
 
 template <typename T>

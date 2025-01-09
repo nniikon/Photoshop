@@ -6,14 +6,14 @@
 
 #include <cassert>
 
-bool loadPlugin() {
+bool onLoadPlugin() {
     auto secondary_panel = std::make_unique<ps::SecondaryPanel>();
 
     psapi::getRootWindow()->addWindow(std::move(secondary_panel));
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
 }
 
 using namespace ps;

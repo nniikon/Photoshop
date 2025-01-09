@@ -7,7 +7,7 @@
 
 using namespace ps;
 
-Layer::Layer(vec2i size)
+Layer::Layer(vec2u size)
     : size_(size),
       pixels_(static_cast<size_t>(size.x) *
               static_cast<size_t>(size.y))
@@ -16,13 +16,13 @@ Layer::Layer(vec2i size)
 Color Layer::getPixel(vec2i pos) const {
     assert_pos(pos);
 
-    return pixels_.at(static_cast<size_t>(pos.y * size_.x + pos.x));
+    return pixels_.at(static_cast<size_t>(pos.y * (int)size_.x + pos.x));
 }
 
 void Layer::setPixel(vec2i pos, Color pixel) {
     assert_pos(pos);
 
-    pixels_.at(static_cast<size_t>(pos.y * size_.x + pos.x)) = pixel;
+    pixels_.at(static_cast<size_t>(pos.y * (int)size_.x + pos.x)) = pixel;
 }
 
 void Layer::assert_pos(vec2i pos) const {
@@ -40,12 +40,12 @@ void Layer::assert_size(vec2i size) const {
     }
 }
 
-void Layer::changeSize(vec2i new_size) {
+void Layer::changeSize(vec2u new_size) {
     std::vector<Color> new_pixels(static_cast<size_t>(new_size.x) *
                                    static_cast<size_t>(new_size.y));
 
-    for (int x = 0; x < size_.x; x++) {
-        for (int y = 0; y < size_.y; y++) {
+    for (unsigned int x = 0; x < size_.x; x++) {
+        for (unsigned int y = 0; y < size_.y; y++) {
             new_pixels.at(static_cast<size_t>(y * new_size.x + x)) =
                 pixels_.at(static_cast<size_t>(y * size_.x + x));
         }
@@ -55,17 +55,53 @@ void Layer::changeSize(vec2i new_size) {
     pixels_ = std::move(new_pixels);
 }
 
+psapi::drawable_id_t Layer::addDrawable(std::unique_ptr<psapi::sfm::Drawable> object) {
+    drawables_.push_back(std::move(object));
+    return static_cast<psapi::drawable_id_t>(drawables_.size() - 1);
+}
+
+void Layer::removeDrawable(psapi::drawable_id_t id) {
+    drawables_.erase(drawables_.begin() + id);
+}
+
+void Layer::removeAllDrawables() {
+    drawables_.clear();
+}
+
+psapi::sfm::vec2u Layer::getSize() const {
+    return size_;
+}
+
+std::unique_ptr<psapi::ILayerSnapshot> Layer::save() {
+    return std::make_unique<LayerSnapshot>(drawables_, pixels_); 
+}
+
+void Layer::restore(psapi::ILayerSnapshot* snapshot) {
+    auto layer_snapshot = static_cast<LayerSnapshot*>(snapshot);
+    drawables_ = std::move(layer_snapshot->drawables_);
+    pixels_ = std::move(layer_snapshot->pixels_);
+}
+
+LayerSnapshot::LayerSnapshot(const std::vector<std::shared_ptr<psapi::sfm::Drawable>>& drawables, 
+                             const std::vector<Color>& pixels)
+    : drawables_(drawables),
+      pixels_(pixels)
+{}
+
+
 // Canvas implementation
 
-Canvas::Canvas(vec2i size, vec2i pos)
+Canvas::Canvas(vec2u size, vec2i pos)
     : temp_layer_(std::make_unique<Layer>(size)),
       layers_(0),
       pos_(pos),
       size_(size),
-      scale_{3.000f, 3.000f},
+      scale_{3.0f, 3.0f},
       offset_{0, 0},
       last_mouse_pos_({0, 0}),
-      is_pressed_(false),
+      is_RMB_pressed_(false),
+      is_LMB_pressed_(false),
+      is_MMB_pressed_(false),
       texture_(),
       sprite_(),
       is_active_(true) {
@@ -74,7 +110,7 @@ Canvas::Canvas(vec2i size, vec2i pos)
                      static_cast<unsigned int>(size_.y));
     sprite_  = psapi::sfm::ISprite::create();
 
-    layers_.push_back(std::make_unique<Layer>(size_));
+    layers_.push_back(std::make_unique<Layer>(size));
 
     for (int x = 0; x < size_.x; x++) {
         for (int y = 0; y < size_.y; y++) {
@@ -144,7 +180,9 @@ class CanvasAction : public psapi::IAction {
 public:
     CanvasAction(const psapi::IRenderWindow* render_window,
                  const psapi::sfm::Event& event,
-                 bool* is_pressed,
+                 bool* is_RMB_pressed,
+                 bool* is_LMB_pressed,
+                 bool* is_MMB_pressed,
                  vec2i* last_mouse_pos,
                  vec2i pos,
                  vec2i size,
@@ -152,7 +190,9 @@ public:
                  vec2f offset)
         : render_window_(render_window),
           event_(event),
-          is_pressed_(is_pressed),
+          is_RMB_pressed_(is_RMB_pressed),
+          is_LMB_pressed_(is_LMB_pressed),
+          is_MMB_pressed_(is_MMB_pressed),
           last_mouse_pos_(last_mouse_pos),
           pos_(pos),
           size_(size),
@@ -173,8 +213,34 @@ public:
     }
 
     bool execute(const Key&) override {
+        bool is_event_press = false;
+        bool was_there_a_mouse_event = false;
+
         if (event_.type == psapi::sfm::Event::MouseButtonReleased) {
-            *is_pressed_ = false;
+            is_event_press = false;
+            was_there_a_mouse_event = true;
+        }
+        else if (event_.type == psapi::sfm::Event::MouseButtonPressed) {
+            is_event_press = true;
+            was_there_a_mouse_event = true;
+        }
+
+        if (was_there_a_mouse_event) {
+            switch (event_.mouseButton.button) {
+                case psapi::sfm::Mouse::Button::Right:
+                    *is_RMB_pressed_ = is_event_press;
+                    break;
+                case psapi::sfm::Mouse::Button::Left:
+                    *is_LMB_pressed_ = is_event_press;
+                    break;
+                case psapi::sfm::Mouse::Button::Middle:
+                    *is_MMB_pressed_ = is_event_press;
+                    break;
+                case psapi::sfm::Mouse::Button::XButton1:
+                case psapi::sfm::Mouse::Button::XButton2:
+                default:
+                    break;
+            }
         }
 
         bool is_in_window = setLastMousePos();
@@ -182,11 +248,7 @@ public:
             return false;
         }
 
-        if (event_.type == psapi::sfm::Event::MouseButtonPressed) {
-            *is_pressed_ = true;
-        }
-
-        return false;
+        return was_there_a_mouse_event;
     }
 
     bool isUndoable(const Key&) override {
@@ -196,7 +258,11 @@ public:
 private:
     const psapi::IRenderWindow* render_window_;
     const psapi::sfm::Event& event_;
-    bool* is_pressed_;
+
+    bool* is_RMB_pressed_ = nullptr;
+    bool* is_LMB_pressed_ = nullptr;
+    bool* is_MMB_pressed_ = nullptr;
+
     vec2i* last_mouse_pos_;
 
     vec2i pos_      = {0, 0};
@@ -209,7 +275,9 @@ std::unique_ptr<psapi::IAction> Canvas::createAction(const psapi::IRenderWindow*
                                                      const psapi::Event& event){
     return std::make_unique<CanvasAction>(renderWindow,
                                           event,
-                                          &is_pressed_,
+                                          &is_RMB_pressed_,
+                                          &is_LMB_pressed_,
+                                          &is_MMB_pressed_,
                                           &last_mouse_pos_,
                                           pos_,
                                           size_,
@@ -338,7 +406,7 @@ void Canvas::setSize(const vec2u& size) {
     }
 }
 
-void Canvas::setScale(vec2f scale) {
+void Canvas::setZoom(vec2f scale) {
     scale_ = scale;
 }
 
@@ -378,10 +446,34 @@ vec2i Canvas::getMousePosition() const {
     return last_mouse_pos_;
 }
 
-bool Canvas::isPressed() const {
-    return is_pressed_;
+bool Canvas::isPressedRightMouseButton() const {
+    return is_RMB_pressed_;
+}
+bool Canvas::isPressedLeftMouseButton()  const {
+    return is_LMB_pressed_;
+}
+bool Canvas::isPressedScrollButton()     const {
+    return is_MMB_pressed_;
 }
 
 bool Canvas::isActive() const {
     return is_active_;
+}
+
+namespace {
+    const psapi::sfm::Color kCanvasBaseColor = {0u, 0u, 0u, 255u};
+}
+
+psapi::sfm::Color Canvas::getCanvasBaseColor() const {
+    return kCanvasBaseColor;
+}
+
+std::unique_ptr<psapi::ICanvasSnapshot> Canvas::save() {
+    assert(0 && "Not implemented");
+
+    return nullptr;
+}
+
+void Canvas::restore(psapi::ICanvasSnapshot* snapshot) {
+    assert(0 && "Not implemented");
 }

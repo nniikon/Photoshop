@@ -148,7 +148,7 @@ void LineAction::transferFinalLineToLayer(psapi::ILayer* active_layer) {
     }
 }
 
-bool loadPlugin() {
+bool onLoadPlugin() {
     ps::SpriteInfo sprite_info = ps::ParseSpriteFromConfig("system_plugins/line/ps_plugin_line_config.pscfg");
     texture = sprite_info.texture.release();
 
@@ -163,6 +163,6 @@ bool loadPlugin() {
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
     delete texture;
 }

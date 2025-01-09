@@ -15,13 +15,33 @@ using psapi::sfm::vec2f;
 using psapi::sfm::ITexture;
 using psapi::sfm::ISprite;
 
+struct LayerSnapshot : public psapi::ILayerSnapshot {
+    LayerSnapshot(const std::vector<std::shared_ptr<psapi::sfm::Drawable>>& drawables, 
+                  const std::vector<Color>& pixels);
+
+    std::vector<std::shared_ptr<psapi::sfm::Drawable>> drawables_;
+    std::vector<Color> pixels_;
+};
+
 class Layer : public psapi::ILayer {
 public:
-    Layer(vec2i size);
+    Layer(vec2u size);
     virtual Color getPixel(vec2i pos)        const override;
     virtual void  setPixel(vec2i pos, Color pixel) override;
 
-    void changeSize(vec2i new_size);
+    virtual psapi::drawable_id_t
+        addDrawable(std::unique_ptr<psapi::sfm::Drawable> object) override;
+
+    virtual void removeDrawable(psapi::drawable_id_t id) override;
+
+    virtual void removeAllDrawables() override;
+
+    virtual psapi::sfm::vec2u getSize() const override;
+
+    void changeSize(vec2u new_size);
+
+    virtual std::unique_ptr<psapi::ILayerSnapshot> save() override;
+    virtual void restore(psapi::ILayerSnapshot* snapshot) override;
 
 private:
     friend class Canvas;
@@ -32,8 +52,9 @@ private:
     void assert_pos (vec2i pos) const;
     void assert_size(vec2i size) const;
 
-    vec2i size_;
+    vec2u size_;
     std::vector<Color> pixels_;
+    std::vector<std::shared_ptr<psapi::sfm::Drawable>> drawables_;
 };
 
 class Scrollable {
@@ -49,9 +70,16 @@ public:
     virtual psapi::vec2i getPos() const = 0;
 };
 
+class CanvasSnapshot : public psapi::ICanvasSnapshot {
+public:
+    CanvasSnapshot(const std::vector<std::shared_ptr<psapi::sfm::Drawable>>& drawables, 
+                   const std::vector<psapi::ILayerSnapshot*>& layers, 
+                   const psapi::vec2f& offset);
+};
+
 class Canvas : public psapi::ICanvas, public ps::Scrollable {
 public:
-    Canvas(vec2i size, vec2i pos);
+    Canvas(vec2u size, vec2i pos);
     virtual ~Canvas() = default;
 
     virtual void draw(psapi::IRenderWindow* renderWindow)         override;
@@ -89,16 +117,24 @@ public:
     virtual void setSize (const vec2u& size)  override;
 
     vec2f getScale() const;
-    virtual void setScale(vec2f scale) override;
+    virtual void setZoom(vec2f scale) override;
 
     void setOffset(vec2f offset) override;
     vec2f getOffset() const      override;
     vec2f getMaxOffset() const   override;
 
     virtual vec2i getMousePosition() const override;
-    virtual bool  isPressed()        const override;
+
+    virtual bool isPressedRightMouseButton() const override;
+    virtual bool isPressedLeftMouseButton()  const override;
+    virtual bool isPressedScrollButton()     const override;
 
     virtual bool isActive() const override;
+
+    virtual psapi::sfm::Color getCanvasBaseColor() const override;
+
+    virtual std::unique_ptr<psapi::ICanvasSnapshot> save() override;
+    virtual void restore(psapi::ICanvasSnapshot* snapshot) override;
 
 private:
     size_t active_layer_ = 0;
@@ -110,12 +146,14 @@ private:
     bool setLastMousePos(const psapi::IRenderWindow* renderWindow);
 
     vec2i pos_      = {0, 0};
-    vec2i size_     = {0, 0};
+    vec2u size_     = {0, 0};
     vec2f scale_    = {1.0f, 1.0f};
     vec2f offset_   = {0.0f, 0.0f};
 
     vec2i last_mouse_pos_ = {0, 0};
-    bool is_pressed_ = false;
+    bool is_RMB_pressed_ = false;
+    bool is_LMB_pressed_ = false;
+    bool is_MMB_pressed_ = false;
 
     std::unique_ptr<ITexture> texture_;
     std::unique_ptr<ISprite>  sprite_;

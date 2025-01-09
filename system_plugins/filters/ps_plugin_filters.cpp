@@ -184,7 +184,7 @@ bool BlurAction::activate() {
     return false;
 }
 
-bool loadPlugin() {
+bool onLoadPlugin() {
     ps::SpriteInfo sprite_info = ps::ParseSpriteFromConfig("system_plugins/filters/ps_plugin_filter_negative_config.pscfg");
     neg_filter_texture = sprite_info.texture.release();
 
@@ -218,7 +218,7 @@ bool loadPlugin() {
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
     delete neg_filter_texture;
     delete emboss_filter_texture;
     delete blur_filter_texture;

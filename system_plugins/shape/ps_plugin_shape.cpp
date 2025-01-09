@@ -134,7 +134,7 @@ void ShapeAction<T>::transferFinalShapeToLayer(psapi::ILayer* active_layer) {
     }
 }
 
-bool loadPlugin() {
+bool onLoadPlugin() {
     ps::SpriteInfo    rect_sprite_info = ps::ParseSpriteFromConfig("system_plugins/shape/ps_plugin_rect_config.pscfg");
     ps::SpriteInfo ellipse_sprite_info = ps::ParseSpriteFromConfig("system_plugins/shape/ps_plugin_ellipse_config.pscfg");
 
@@ -158,7 +158,7 @@ bool loadPlugin() {
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
     delete    rect_texture;
     delete ellipse_texture;
 }

@@ -66,6 +66,11 @@ protected:
 };
 
 class ABar : public psapi::IBar {
+private:
+    struct ChildInfo {
+        psapi::vec2i pos;
+        psapi::vec2u size;
+    };
 public:
     ABar(std::unique_ptr<psapi::sfm::ISprite> sprite,
          std::unique_ptr<psapi::sfm::ISprite> hover_button_sprite,
@@ -103,12 +108,12 @@ public:
     virtual void addWindow(std::unique_ptr<IWindow> window) override;
     virtual void removeWindow(psapi::wid_t id)              override;
 
-    virtual psapi::ChildInfo getNextChildInfo() const override;
-
     virtual void finishButtonDraw(psapi::IRenderWindow* renderWindow,
                                   const psapi::IBarButton* button) const override;
 
     virtual bool isActive() const override;
+
+    virtual bool unPressAllButtons() override;
 
 protected:
     psapi::wid_t id_ = psapi::kInvalidWindowId;
@@ -127,12 +132,12 @@ protected:
 
     int n_buttons_    = 0;
 
-    mutable int cur_button_it = 0;
-
     std::unique_ptr<psapi::sfm::ISprite> sprite_;
     std::unique_ptr<psapi::sfm::ISprite> hover_button_sprite_;
     std::unique_ptr<psapi::sfm::ISprite> pressed_button_sprite_;
     std::unique_ptr<psapi::sfm::ISprite> active_button_sprite_;
+
+    ChildInfo getChildInfo(int child_num) const;
 
     void drawChildren(psapi::IRenderWindow* renderWindow);
     void drawMyself  (psapi::IRenderWindow* renderWindow);

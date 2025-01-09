@@ -98,7 +98,7 @@ constexpr float kTimeStep = 0.00001f;
 
 bool BrushAction::operator()(const psapi::IRenderWindow* renderWindow,
                              const psapi::sfm::Event& event) {
-    if (!canvas_ || !canvas_->isPressed()) {
+    if (!canvas_ || !canvas_->isPressedLeftMouseButton()) {
         mouse_points_.clear();
         return false;
     }
@@ -132,7 +132,7 @@ bool BrushAction::activate() {
     return true;
 }
 
-bool loadPlugin() {
+bool onLoadPlugin() {
     texture = psapi::sfm::ITexture::create().release(); // raii rip
     texture->loadFromFile("./assets/buttons.png");
 
@@ -156,6 +156,6 @@ bool loadPlugin() {
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
     delete texture;
 }

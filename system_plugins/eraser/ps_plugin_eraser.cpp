@@ -33,7 +33,7 @@ bool ClearAction::operator()(const psapi::IRenderWindow* renderWindow,
     return true;
 }
 
-bool loadPlugin() {
+bool onLoadPlugin() {
     ps::SpriteInfo sprite_info = ps::ParseSpriteFromConfig("system_plugins/eraser/ps_plugin_eraser_config.pscfg");
     texture = sprite_info.texture.release();
 
@@ -48,6 +48,6 @@ bool loadPlugin() {
     return true;
 }
 
-void unloadPlugin() {
+void onUnloadPlugin() {
     delete texture;
 }

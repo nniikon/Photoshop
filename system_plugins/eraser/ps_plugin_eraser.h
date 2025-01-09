@@ -5,8 +5,8 @@
 #include "api_canvas.hpp"
 
 extern "C" {
-    bool loadPlugin();
-    void unloadPlugin();
+    bool onLoadPlugin();
+    void onUnloadPlugin();
 }
 
 class ClearAction : public ps::ButtonAction {
